@@ -1,0 +1,315 @@
+// Copyright (c) The Minecraft Seed Finding Team
+//
+// MIT License
+
+#ifndef LIBSEEDFINDING_LCG_H
+#define LIBSEEDFINDING_LCG_H
+
+#if __cplusplus < 201402L
+#error "lcg.h requires C++ 14"
+#endif
+
+#include <cinttypes>
+#include <type_traits>
+
+/**
+ * Contains an implementation of the Java LCG and utility functions surrounding it.
+ * Many functions here are constexpr, meaning that they can be evaluated at compile-time if their inputs are
+ * also statically known. Otherwise, they are usually inlined by the compiler instead.
+ */
+namespace lcg {
+    typedef uint64_t Random;
+
+    const uint64_t MULTIPLIER = 0x5deece66dLL;
+    const uint64_t ADDEND = 0xbLL;
+    const uint64_t MASK = 0xffffffffffffL;
+
+    /// The minimum distance that two nextFloat values can be from each other. May be used to iterate over all valid floats.
+    const float FLOAT_UNIT = 1.0f / static_cast<float>(1L << 24);
+    /// The minimum distance that two nextDouble values can be from each other. May be used to iterate over all valid doubles.
+    const double DOUBLE_UNIT = 1.0 / static_cast<double>(1LL << 53);
+
+    // Declared here for forward reference
+    template<int B>
+    constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random& rand);
+
+    /**
+     * Contains internal functions. These are unstable, do not use them for any reason!
+     * If you think you need something from in here, first look for alternatives, else consider adding something to the public API for it.
+     * The internal functions are included in the header file so that the compiler can optimize using their implementations.
+     */
+    namespace internal {
+        // for returning multiple values
+        struct LCG {
+            uint64_t multiplier;
+            uint64_t addend;
+        };
+
+        constexpr LCG combine(uint64_t calls) {
+            uint64_t multiplier = 1;
+            uint64_t addend = 0;
+
+            uint64_t intermediate_multiplier = MULTIPLIER;
+            uint64_t intermediate_addend = ADDEND;
+
+            for (uint64_t k = calls; k != 0; k >>= 1) {
+                if ((k & 1) != 0) {
+                    multiplier *= intermediate_multiplier;
+                    addend = intermediate_multiplier * addend + intermediate_addend;
+                }
+
+                intermediate_addend = (intermediate_multiplier + 1) * intermediate_addend;
+                intermediate_multiplier *= intermediate_multiplier;
+            }
+
+            multiplier &= MASK;
+            addend &= MASK;
+
+            return {multiplier, addend};
+        }
+
+        constexpr LCG combine(int64_t calls) {
+            return combine(static_cast<uint64_t>(calls));
+        }
+
+        constexpr uint64_t gcd(uint64_t a, uint64_t b) {
+            if (b == 0) {
+                return a;
+            }
+            while (true) {
+                a %= b;
+                if (a == 0) {
+                    return b;
+                }
+                b %= a;
+                if (b == 0) {
+                    return a;
+                }
+            }
+        }
+
+        // Returns modulo inverse of a with
+        // respect to m using extended Euclid
+        // Algorithm Assumption: a and m are
+        // coprimes, i.e., gcd(a, m) = 1
+        // stolen code, now handles the case where gcd(a,m) != 1
+        constexpr uint64_t euclidean_helper(uint64_t a, uint64_t m) {
+            uint64_t m0 = m;
+            uint64_t y = 0, x = 1;
+            if (m == 1) {
+                return 0;
+            }
+            uint64_t gcd_ = gcd(a, m);
+            while (a > gcd_) {
+                uint64_t q = a / m;
+                uint64_t t = m;
+                m = a % m;
+                a = t;
+                t = y;
+                y = x - q * y;
+                x = t;
+            }
+            if (x < 0) {
+                x += m0;
+            }
+            return x;
+        }
+
+        constexpr uint64_t theta(uint64_t num) {
+            if (num % 4 == 3) {
+                num = (1L << 50) - num;
+            }
+
+            // xhat = num
+            uint64_t xhat_lo = num;
+            uint64_t xhat_hi = 0;
+
+            // raise xhat to the power of 2^49 by squaring it 49 times
+            for (int i = 0; i < 49; i++) {
+                xhat_hi = 2 * xhat_hi * xhat_lo;
+                uint64_t xhat_lo_hi = xhat_lo >> 32;
+                uint64_t xhat_lo_lo = xhat_lo & 0xffffffffLL;
+                xhat_hi += xhat_lo_hi * xhat_lo_hi;
+                if (((xhat_lo_hi * xhat_lo_lo) & 0x80000000LL) != 0) {
+                    xhat_hi++;
+                }
+                xhat_lo = xhat_lo * xhat_lo;
+            }
+            xhat_hi &= (1LL << (99 - 64)) - 1;
+
+            // xhat--
+            if (xhat_lo == 0) xhat_hi--;
+            xhat_lo--;
+
+            // xhat >>= 51
+            xhat_lo = (xhat_lo >> 51) | (xhat_hi << (64 - 51));
+
+            // xhat &= MASK
+            xhat_lo &= MASK;
+            return xhat_lo;
+        }
+
+        // Computes nextInt(N) for the case where N is a power of 2. Declared to avoid duplicate code.
+        // Use the more generic public version, they will compile to the same thing.
+        template<int32_t N>
+        constexpr std::enable_if_t<(N > 0 && (N & -N) == N), int32_t> next_int_power_of_2(Random& rand) {
+            return static_cast<int32_t>((static_cast<uint64_t>(next<31>(rand)) * static_cast<uint64_t>(N)) >> 31);
+        }
+
+        constexpr int32_t dynamic_next_int_power_of_2(Random& rand, int32_t n) {
+            return static_cast<int32_t>((static_cast<uint64_t>(next<31>(rand)) * static_cast<uint64_t>(n)) >> 31);
+        }
+    }
+
+
+    /// Advances the Random by an unsigned N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
+    template<uint64_t N = 1>
+    constexpr void uadvance(Random& rand) {
+        internal::LCG lcg = internal::combine(N);
+        rand = (rand * lcg.multiplier + lcg.addend) & MASK;
+    }
+
+    /// Advances the Random by N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
+    template<int64_t N = 1>
+    constexpr void advance(Random& rand) {
+        uadvance<static_cast<uint64_t>(N)>(rand);
+    }
+
+    /// Advances the Random by an unsigned n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
+    constexpr void dynamic_advance(Random& rand, uint64_t n) {
+        internal::LCG lcg = internal::combine(n);
+        rand = (rand * lcg.multiplier + lcg.addend) & MASK;
+    }
+
+    /// Advances the Random by n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
+    constexpr void dynamic_advance(Random& rand, int64_t n) {
+        dynamic_advance(rand, static_cast<uint64_t>(n));
+    }
+
+    /**
+     * Converts a Distance From Zero (DFZ) value to a Random seed.
+     * DFZ is a representation of a seed which is the number of LCG calls required to get from seed 0 to that seed.
+     * To get Random outputs from a DFZ value it must first be converted to a seed, which is done in O(log(dfz)).
+     * In various situations, especially far GPU parallelization, it may be useful to represent seeds this way.
+     */
+    constexpr Random dfz2seed(uint64_t dfz) {
+        Random seed = 0;
+        dynamic_advance(seed, dfz);
+        return seed;
+    }
+
+    /**
+     * Converts a Random seed to DFZ form. See dfz2seed for a description of DFZ form.
+     * This function should be called reservedly, as although it is O(1), it is relatively slow.
+     */
+    constexpr uint64_t seed2dfz(Random seed) {
+        uint64_t a = 25214903917LL;
+        uint64_t b = (((seed * (MULTIPLIER - 1)) * 179120439724963LL) + 1) & ((1LL << 50) - 1);
+        uint64_t abar = internal::theta(a);
+        uint64_t bbar = internal::theta(b);
+        uint64_t gcd_ = internal::gcd(abar, (1LL << 48));
+        return (bbar * internal::euclidean_helper(abar, (1L << 48)) & 0x3FFFFFFFFFFFLL) / gcd_; //+ i*(1L << 48)/gcd;
+    }
+
+    /// Advances the LCG and gets the upper B bits from it.
+    template<int B>
+    constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random& rand) {
+        advance(rand);
+        return static_cast<int32_t>(rand >> (48 - B));
+    }
+
+    /// Does an unbounded nextInt call and returns the result.
+    constexpr int32_t next_int_unbounded(Random& rand) {
+        return next<32>(rand);
+    }
+
+    /// Does a bounded nextInt call with bound N.
+    template<int32_t N>
+    constexpr typename std::enable_if_t<(N > 0), int32_t> next_int(Random& rand) {
+        if ((N & -N) == N) {
+            return internal::next_int_power_of_2<N>(rand);
+        } else {
+            int32_t bits = next<31>(rand);
+            int32_t val = bits % N;
+            while (bits - val + (N-1) < 0) {
+                bits = next<31>(rand);
+                val = bits % N;
+            }
+            return val;
+        }
+    }
+
+    /**
+     * Does a bounded nextInt call with bound N. If N is not a power of 2, then it makes the assumption that the loop
+     * does not iterate more than once. The probability of this being correct depends on N, but for small N this
+     * function is extremely likely to have the same effect as next_int.
+     */
+    template<int32_t N>
+    constexpr typename std::enable_if_t<(N > 0), int32_t> next_int_fast(Random& rand) {
+        if ((N & -N) == N) {
+            return internal::next_int_power_of_2<N>(rand);
+        } else {
+            return next<31>(rand) % N;
+        }
+    }
+
+    /// Does a bounded nextInt call with bound n, used when n is not known in advance.
+    constexpr int32_t dynamic_next_int(Random& rand, int32_t n) {
+        if ((n & -n) == n) {
+            return internal::dynamic_next_int_power_of_2(rand, n);
+        } else {
+            int32_t bits = next<31>(rand);
+            int32_t val = bits % n;
+            while (bits - val + (n-1) < 0) {
+                bits = next<31>(rand);
+                val = bits % n;
+            }
+            return val;
+        }
+    }
+
+    /**
+     * Does a bounded nextInt call with bound n, using the "fast" approach, used when n is not known in advance.
+     * See next_int_fast for a description of the fast approach.
+     */
+    constexpr int32_t dynamic_next_int_fast(Random& rand, int32_t n) {
+        if ((n & -n) == n) {
+            return internal::dynamic_next_int_power_of_2(rand, n);
+        } else {
+            return next<31>(rand) % n;
+        }
+    }
+
+    /// Does a nextLong call.
+    constexpr int64_t next_long(Random& rand) {
+        // separate out calls due to unspecified evaluation order in C++
+        int32_t hi = next<32>(rand);
+        int32_t lo = next<32>(rand);
+        return (static_cast<int64_t>(hi) << 32) + static_cast<int64_t>(lo);
+    }
+
+    /// Does an unsigned nextLong call.
+    constexpr uint64_t next_ulong(Random& rand) {
+        return static_cast<uint64_t>(next_long(rand));
+    }
+
+    /// Does a nextBoolean call.
+    constexpr bool next_bool(Random& rand) {
+        return next<1>(rand) != 0;
+    }
+
+    /// Does a nextFloat call.
+    float next_float(Random& rand) {
+        return static_cast<float>(next<24>(rand)) * FLOAT_UNIT;
+    }
+
+    /// Does a nextDouble call.
+    double next_double(Random& rand) {
+        // separate out calls due to unspecified evaluation order in C++
+        int32_t hi = next<26>(rand);
+        int32_t lo = next<27>(rand);
+        return static_cast<double>((static_cast<int64_t>(hi) << 27) + static_cast<int64_t>(lo)) * DOUBLE_UNIT;
+    }
+}
+
+#endif //LIBSEEDFINDING_LCG_H
