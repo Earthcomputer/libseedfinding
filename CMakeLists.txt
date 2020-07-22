@@ -3,6 +3,9 @@ project(libseedfinding)
 
 set(CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-add_library(libseedfinding dummy.cpp lcg.h)
+add_subdirectory(src)
+add_subdirectory(test)
+
+target_link_libraries(libseedfinding)

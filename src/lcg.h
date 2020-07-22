@@ -208,7 +208,7 @@ namespace lcg {
         uint64_t abar = internal::theta(a);
         uint64_t bbar = internal::theta(b);
         uint64_t gcd_ = internal::gcd(abar, (1LL << 48));
-        return (bbar * internal::euclidean_helper(abar, (1L << 48)) & 0x3FFFFFFFFFFFLL) / gcd_; //+ i*(1L << 48)/gcd;
+        return (bbar * internal::euclidean_helper(abar, (1LL << 48)) & 0x3FFFFFFFFFFFLL) / gcd_; //+ i*(1L << 48)/gcd;
     }
 
     /// Advances the LCG and gets the upper B bits from it.
