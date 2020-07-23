@@ -6,11 +6,12 @@
 #define LIBSEEDFINDING_LCG_H
 
 #if __cplusplus < 201402L
-#error "lcg.h requires C++ 14"
+#error lcg.h requires C++ 14
 #endif
 
 #include <cinttypes>
 #include <type_traits>
+#include "util.h"
 
 /**
  * Contains an implementation of the Java LCG and utility functions surrounding it.
@@ -37,6 +38,7 @@ namespace lcg {
      * Contains internal functions. These are unstable, do not use them for any reason!
      * If you think you need something from in here, first look for alternatives, else consider adding something to the public API for it.
      * The internal functions are included in the header file so that the compiler can optimize using their implementations.
+     * Many of these functions are force-inlined. This is to ensure the public force-inlined functions are fully inlined properly.
      */
     namespace internal {
         // for returning multiple values
@@ -45,7 +47,7 @@ namespace lcg {
             uint64_t addend;
         };
 
-        constexpr LCG combine(uint64_t calls) {
+        FORCEINLINE constexpr LCG combine(uint64_t calls) {
             uint64_t multiplier = 1;
             uint64_t addend = 0;
 
@@ -68,11 +70,11 @@ namespace lcg {
             return {multiplier, addend};
         }
 
-        constexpr LCG combine(int64_t calls) {
+        FORCEINLINE constexpr LCG combine(int64_t calls) {
             return combine(static_cast<uint64_t>(calls));
         }
 
-        constexpr uint64_t gcd(uint64_t a, uint64_t b) {
+        FORCEINLINE constexpr uint64_t gcd(uint64_t a, uint64_t b) {
             if (b == 0) {
                 return a;
             }
@@ -93,7 +95,7 @@ namespace lcg {
         // Algorithm Assumption: a and m are
         // coprimes, i.e., gcd(a, m) = 1
         // stolen code, now handles the case where gcd(a,m) != 1
-        constexpr uint64_t euclidean_helper(uint64_t a, uint64_t m) {
+        FORCEINLINE constexpr uint64_t euclidean_helper(uint64_t a, uint64_t m) {
             uint64_t m0 = m;
             uint64_t y = 0, x = 1;
             if (m == 1) {
@@ -115,7 +117,7 @@ namespace lcg {
             return x;
         }
 
-        constexpr uint64_t theta(uint64_t num) {
+        FORCEINLINE constexpr uint64_t theta(uint64_t num) {
             if (num % 4 == 3) {
                 num = (1L << 50) - num;
             }
@@ -175,10 +177,10 @@ namespace lcg {
         uadvance<static_cast<uint64_t>(N)>(rand);
     }
 
-    /// Advances the Random by an unsigned n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
-    constexpr void dynamic_advance(Random& rand, uint64_t n) {
+    /// Force-inlined version of dynamic_advance. Do not use unless profiling tells you that the compiler is not inlining anyway!
+    FORCEINLINE constexpr void dynamic_advance_inline(Random& rand, uint64_t n) {
         #define ADVANCE_BIT(N) if (n < (1LL << N)) return;\
-           if (n & (1LL << N)) advance<1LL << N>(rand);
+           if (n & (1LL << N)) uadvance<1LL << N>(rand);
         ADVANCE_BIT(0)
         ADVANCE_BIT(1)
         ADVANCE_BIT(2)
@@ -230,9 +232,26 @@ namespace lcg {
         #undef ADVANCE_BIT
     }
 
+    /// Advances the Random by an unsigned n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
+    constexpr void dynamic_advance(Random& rand, uint64_t n) {
+        dynamic_advance_inline(rand, n);
+    }
+
+    /// Force-inlined version of dynamic_advance. Do not use unless profiling tells you that the compiler is not inlining anyway!
+    FORCEINLINE constexpr void dynamic_advance_inline(Random& rand, int64_t n) {
+        dynamic_advance_inline(rand, static_cast<uint64_t>(n));
+    }
+
     /// Advances the Random by n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
     constexpr void dynamic_advance(Random& rand, int64_t n) {
-        dynamic_advance(rand, static_cast<uint64_t>(n));
+        dynamic_advance_inline(rand, n);
+    }
+
+    /// Force-inlined version of dfz2seed. Do not use unless profiling tells you that the compiler is not inlining anyway!
+    FORCEINLINE constexpr Random dfz2seed_inline(uint64_t dfz) {
+        Random seed = 0;
+        dynamic_advance_inline(seed, dfz);
+        return seed;
     }
 
     /**
@@ -242,9 +261,17 @@ namespace lcg {
      * In various situations, especially far GPU parallelization, it may be useful to represent seeds this way.
      */
     constexpr Random dfz2seed(uint64_t dfz) {
-        Random seed = 0;
-        dynamic_advance(seed, dfz);
-        return seed;
+        return dfz2seed_inline(dfz);
+    }
+
+    /// Force-inlined version of seed2dfz. Do not use unless profiling tells you that the compiler is not inlining anyway!
+    FORCEINLINE constexpr uint64_t seed2dfz_inline(Random seed) {
+        uint64_t a = 25214903917LL;
+        uint64_t b = (((seed * (MULTIPLIER - 1)) * 179120439724963LL) + 1) & ((1LL << 50) - 1);
+        uint64_t abar = internal::theta(a);
+        uint64_t bbar = internal::theta(b);
+        uint64_t gcd_ = internal::gcd(abar, (1LL << 48));
+        return (bbar * internal::euclidean_helper(abar, (1LL << 48)) & 0x3FFFFFFFFFFFLL) / gcd_; //+ i*(1L << 48)/gcd;
     }
 
     /**
@@ -252,12 +279,7 @@ namespace lcg {
      * This function should be called reservedly, as although it is O(1), it is relatively slow.
      */
     constexpr uint64_t seed2dfz(Random seed) {
-        uint64_t a = 25214903917LL;
-        uint64_t b = (((seed * (MULTIPLIER - 1)) * 179120439724963LL) + 1) & ((1LL << 50) - 1);
-        uint64_t abar = internal::theta(a);
-        uint64_t bbar = internal::theta(b);
-        uint64_t gcd_ = internal::gcd(abar, (1LL << 48));
-        return (bbar * internal::euclidean_helper(abar, (1LL << 48)) & 0x3FFFFFFFFFFFLL) / gcd_; //+ i*(1L << 48)/gcd;
+        return seed2dfz_inline(seed);
     }
 
     /// Advances the LCG and gets the upper B bits from it.
