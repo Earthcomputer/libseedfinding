@@ -177,8 +177,61 @@ namespace lcg {
 
     /// Advances the Random by an unsigned n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
     constexpr void dynamic_advance(Random& rand, uint64_t n) {
-        internal::LCG lcg = internal::combine(n);
-        rand = (rand * lcg.multiplier + lcg.addend) & MASK;
+        #define ADVANCE_BIT(N, then) if (n >= (1LL << N)) {\
+           if (n & (1LL << N)) {\
+               advance<1LL << N>(rand);\
+           }\
+           then\
+        }
+        ADVANCE_BIT(0,
+        ADVANCE_BIT(1,
+        ADVANCE_BIT(2,
+        ADVANCE_BIT(3,
+        ADVANCE_BIT(4,
+        ADVANCE_BIT(5,
+        ADVANCE_BIT(6,
+        ADVANCE_BIT(7,
+        ADVANCE_BIT(8,
+        ADVANCE_BIT(9,
+        ADVANCE_BIT(10,
+        ADVANCE_BIT(11,
+        ADVANCE_BIT(12,
+        ADVANCE_BIT(13,
+        ADVANCE_BIT(14,
+        ADVANCE_BIT(15,
+        ADVANCE_BIT(16,
+        ADVANCE_BIT(17,
+        ADVANCE_BIT(18,
+        ADVANCE_BIT(19,
+        ADVANCE_BIT(20,
+        ADVANCE_BIT(21,
+        ADVANCE_BIT(22,
+        ADVANCE_BIT(23,
+        ADVANCE_BIT(24,
+        ADVANCE_BIT(25,
+        ADVANCE_BIT(26,
+        ADVANCE_BIT(27,
+        ADVANCE_BIT(28,
+        ADVANCE_BIT(29,
+        ADVANCE_BIT(30,
+        ADVANCE_BIT(31,
+        ADVANCE_BIT(32,
+        ADVANCE_BIT(33,
+        ADVANCE_BIT(34,
+        ADVANCE_BIT(35,
+        ADVANCE_BIT(36,
+        ADVANCE_BIT(37,
+        ADVANCE_BIT(38,
+        ADVANCE_BIT(39,
+        ADVANCE_BIT(40,
+        ADVANCE_BIT(41,
+        ADVANCE_BIT(42,
+        ADVANCE_BIT(43,
+        ADVANCE_BIT(44,
+        ADVANCE_BIT(45,
+        ADVANCE_BIT(46,
+        ADVANCE_BIT(47, ;))))))))))))))))))))))))))))))))))))))))))))))))
+        #undef ADVANCE_BIT
     }
 
     /// Advances the Random by n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
