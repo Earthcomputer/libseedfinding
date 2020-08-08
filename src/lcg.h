@@ -128,14 +128,23 @@ namespace lcg {
 
             // raise xhat to the power of 2^49 by squaring it 49 times
             for (int i = 0; i < 49; i++) {
-                xhat_hi = 2 * xhat_hi * xhat_lo;
-                uint64_t xhat_lo_hi = xhat_lo >> 32;
-                uint64_t xhat_lo_lo = xhat_lo & 0xffffffffLL;
-                xhat_hi += xhat_lo_hi * xhat_lo_hi;
-                if (((xhat_lo_hi * xhat_lo_lo) & 0x80000000LL) != 0) {
-                    xhat_hi++;
-                }
-                xhat_lo = xhat_lo * xhat_lo;
+                // https://www.codeproject.com/Tips/618570/UInt-Multiplication-Squaring
+                uint64_t r1 = xhat_lo & 0xffffffffLL;
+                uint64_t t = r1 * r1;
+                uint64_t w3 = t & 0xffffffffLL;
+                uint64_t k = t >> 32;
+                uint64_t r = xhat_lo >> 32;
+                uint64_t m = r * r1;
+                t = m + k;
+                uint64_t w2 = t & 0xffffffffLL;
+                uint64_t w1 = t >> 32;
+                t = m + w2;
+                k = t >> 32;
+                uint64_t new_hi = r * r + w1 + k;
+                uint64_t new_lo = (t << 32) + w3;
+                new_hi += (xhat_hi * xhat_lo) << 1;
+                xhat_lo = new_lo;
+                xhat_hi = new_hi;
             }
             xhat_hi &= (1LL << (99 - 64)) - 1;
 
