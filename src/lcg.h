@@ -10,6 +10,7 @@
 #endif
 
 #include <cinttypes>
+#include <limits>
 #include <type_traits>
 #include "util.h"
 
@@ -379,12 +380,12 @@ namespace lcg {
     }
 
     /// Does a nextFloat call.
-    float next_float(Random& rand) {
+    std::enable_if_t<std::numeric_limits<float>::is_iec559, float> next_float(Random& rand) {
         return static_cast<float>(next<24>(rand)) * FLOAT_UNIT;
     }
 
     /// Does a nextDouble call.
-    double next_double(Random& rand) {
+    std::enable_if_t<std::numeric_limits<double>::is_iec559, double> next_double(Random& rand) {
         // separate out calls due to unspecified evaluation order in C++
         int32_t hi = next<26>(rand);
         int32_t lo = next<27>(rand);
