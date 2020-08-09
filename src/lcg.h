@@ -112,9 +112,6 @@ namespace lcg {
                 y = x - q * y;
                 x = t;
             }
-            if (x < 0) {
-                x += m0;
-            }
             return x;
         }
 
