@@ -16,6 +16,12 @@
 #define FORCEINLINE
 #endif
 
+#ifdef __CUDACC__
+#define DEVICEABLE __host__ __device__
+#else
+#define DEVICEABLE
+#endif
+
 #ifdef __CUDA_ARCH__
 #define DEVICE_FORCEINLINE FORCEINLINE
 #define HOST_FORCEINLINE

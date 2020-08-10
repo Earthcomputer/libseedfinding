@@ -33,7 +33,7 @@ namespace lcg {
 
     // Declared here for forward reference
     template<int B>
-    constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random& rand);
+    DEVICEABLE constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random& rand);
 
     /**
      * Contains internal functions. These are unstable, do not use them for any reason!
@@ -48,7 +48,7 @@ namespace lcg {
             uint64_t addend;
         };
 
-        FORCEINLINE constexpr LCG combine(uint64_t calls) {
+        DEVICEABLE FORCEINLINE constexpr LCG combine(uint64_t calls) {
             uint64_t multiplier = 1;
             uint64_t addend = 0;
 
@@ -71,11 +71,11 @@ namespace lcg {
             return {multiplier, addend};
         }
 
-        FORCEINLINE constexpr LCG combine(int64_t calls) {
+        DEVICEABLE FORCEINLINE constexpr LCG combine(int64_t calls) {
             return combine(static_cast<uint64_t>(calls));
         }
 
-        FORCEINLINE constexpr uint64_t gcd(uint64_t a, uint64_t b) {
+        DEVICEABLE FORCEINLINE constexpr uint64_t gcd(uint64_t a, uint64_t b) {
             if (b == 0) {
                 return a;
             }
@@ -96,7 +96,7 @@ namespace lcg {
         // Algorithm Assumption: a and m are
         // coprimes, i.e., gcd(a, m) = 1
         // stolen code, now handles the case where gcd(a,m) != 1
-        FORCEINLINE constexpr uint64_t euclidean_helper(uint64_t a, uint64_t m) {
+        DEVICEABLE FORCEINLINE constexpr uint64_t euclidean_helper(uint64_t a, uint64_t m) {
             uint64_t m0 = m;
             uint64_t y = 0, x = 1;
             if (m == 1) {
@@ -115,7 +115,7 @@ namespace lcg {
             return x;
         }
 
-        FORCEINLINE constexpr uint64_t theta(uint64_t num) {
+        DEVICEABLE FORCEINLINE constexpr uint64_t theta(uint64_t num) {
             if (num % 4 == 3) {
                 num = (1L << 50) - num;
             }
@@ -161,11 +161,11 @@ namespace lcg {
         // Computes nextInt(N) for the case where N is a power of 2. Declared to avoid duplicate code.
         // Use the more generic public version, they will compile to the same thing.
         template<int32_t N>
-        constexpr std::enable_if_t<(N > 0 && (N & -N) == N), int32_t> next_int_power_of_2(Random& rand) {
+        DEVICEABLE constexpr std::enable_if_t<(N > 0 && (N & -N) == N), int32_t> next_int_power_of_2(Random& rand) {
             return static_cast<int32_t>((static_cast<uint64_t>(next<31>(rand)) * static_cast<uint64_t>(N)) >> 31);
         }
 
-        constexpr int32_t dynamic_next_int_power_of_2(Random& rand, int32_t n) {
+        DEVICEABLE constexpr int32_t dynamic_next_int_power_of_2(Random& rand, int32_t n) {
             return static_cast<int32_t>((static_cast<uint64_t>(next<31>(rand)) * static_cast<uint64_t>(n)) >> 31);
         }
     }
@@ -173,19 +173,19 @@ namespace lcg {
 
     /// Advances the Random by an unsigned N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
     template<uint64_t N = 1>
-    constexpr void uadvance(Random& rand) {
+    DEVICEABLE constexpr void uadvance(Random& rand) {
         internal::LCG lcg = internal::combine(N);
         rand = (rand * lcg.multiplier + lcg.addend) & MASK;
     }
 
     /// Advances the Random by N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
     template<int64_t N = 1>
-    constexpr void advance(Random& rand) {
+    DEVICEABLE constexpr void advance(Random& rand) {
         uadvance<static_cast<uint64_t>(N)>(rand);
     }
 
     /// Force-inlined version of dynamic_advance. Do not use unless profiling tells you that the compiler is not inlining anyway!
-    FORCEINLINE constexpr void dynamic_advance_inline(Random& rand, uint64_t n) {
+    DEVICEABLE FORCEINLINE constexpr void dynamic_advance_inline(Random& rand, uint64_t n) {
         #define ADVANCE_BIT(N) if (n < (1LL << N)) return;\
            if (n & (1LL << N)) uadvance<1LL << N>(rand);
         ADVANCE_BIT(0)
@@ -240,22 +240,22 @@ namespace lcg {
     }
 
     /// Advances the Random by an unsigned n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
-    constexpr void dynamic_advance(Random& rand, uint64_t n) {
+    DEVICEABLE constexpr void dynamic_advance(Random& rand, uint64_t n) {
         dynamic_advance_inline(rand, n);
     }
 
     /// Force-inlined version of dynamic_advance. Do not use unless profiling tells you that the compiler is not inlining anyway!
-    FORCEINLINE constexpr void dynamic_advance_inline(Random& rand, int64_t n) {
+    DEVICEABLE FORCEINLINE constexpr void dynamic_advance_inline(Random& rand, int64_t n) {
         dynamic_advance_inline(rand, static_cast<uint64_t>(n));
     }
 
     /// Advances the Random by n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
-    constexpr void dynamic_advance(Random& rand, int64_t n) {
+    DEVICEABLE constexpr void dynamic_advance(Random& rand, int64_t n) {
         dynamic_advance_inline(rand, n);
     }
 
     /// Force-inlined version of dfz2seed. Do not use unless profiling tells you that the compiler is not inlining anyway!
-    FORCEINLINE constexpr Random dfz2seed_inline(uint64_t dfz) {
+    DEVICEABLE FORCEINLINE constexpr Random dfz2seed_inline(uint64_t dfz) {
         Random seed = 0;
         dynamic_advance_inline(seed, dfz);
         return seed;
@@ -267,12 +267,12 @@ namespace lcg {
      * To get Random outputs from a DFZ value it must first be converted to a seed, which is done in O(log(dfz)).
      * In various situations, especially far GPU parallelization, it may be useful to represent seeds this way.
      */
-    constexpr Random dfz2seed(uint64_t dfz) {
+    DEVICEABLE constexpr Random dfz2seed(uint64_t dfz) {
         return dfz2seed_inline(dfz);
     }
 
     /// Force-inlined version of seed2dfz. Do not use unless profiling tells you that the compiler is not inlining anyway!
-    FORCEINLINE constexpr uint64_t seed2dfz_inline(Random seed) {
+    DEVICEABLE FORCEINLINE constexpr uint64_t seed2dfz_inline(Random seed) {
         uint64_t a = 25214903917LL;
         uint64_t b = (((seed * (MULTIPLIER - 1)) * 179120439724963LL) + 1) & ((1LL << 50) - 1);
         uint64_t abar = internal::theta(a);
@@ -285,25 +285,25 @@ namespace lcg {
      * Converts a Random seed to DFZ form. See dfz2seed for a description of DFZ form.
      * This function should be called reservedly, as although it is O(1), it is relatively slow.
      */
-    constexpr uint64_t seed2dfz(Random seed) {
+    DEVICEABLE constexpr uint64_t seed2dfz(Random seed) {
         return seed2dfz_inline(seed);
     }
 
     /// Advances the LCG and gets the upper B bits from it.
     template<int B>
-    constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random& rand) {
+    DEVICEABLE constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random& rand) {
         advance(rand);
         return static_cast<int32_t>(rand >> (48 - B));
     }
 
     /// Does an unbounded nextInt call and returns the result.
-    constexpr int32_t next_int_unbounded(Random& rand) {
+    DEVICEABLE constexpr int32_t next_int_unbounded(Random& rand) {
         return next<32>(rand);
     }
 
     /// Does a bounded nextInt call with bound N.
     template<int32_t N>
-    constexpr typename std::enable_if_t<(N > 0), int32_t> next_int(Random& rand) {
+    DEVICEABLE constexpr typename std::enable_if_t<(N > 0), int32_t> next_int(Random& rand) {
         if ((N & -N) == N) {
             return internal::next_int_power_of_2<N>(rand);
         } else {
@@ -323,7 +323,7 @@ namespace lcg {
      * function is extremely likely to have the same effect as next_int.
      */
     template<int32_t N>
-    constexpr typename std::enable_if_t<(N > 0), int32_t> next_int_fast(Random& rand) {
+    DEVICEABLE constexpr typename std::enable_if_t<(N > 0), int32_t> next_int_fast(Random& rand) {
         if ((N & -N) == N) {
             return internal::next_int_power_of_2<N>(rand);
         } else {
@@ -332,7 +332,7 @@ namespace lcg {
     }
 
     /// Does a bounded nextInt call with bound n, used when n is not known in advance.
-    constexpr int32_t dynamic_next_int(Random& rand, int32_t n) {
+    DEVICEABLE constexpr int32_t dynamic_next_int(Random& rand, int32_t n) {
         if ((n & -n) == n) {
             return internal::dynamic_next_int_power_of_2(rand, n);
         } else {
@@ -350,7 +350,7 @@ namespace lcg {
      * Does a bounded nextInt call with bound n, using the "fast" approach, used when n is not known in advance.
      * See next_int_fast for a description of the fast approach.
      */
-    constexpr int32_t dynamic_next_int_fast(Random& rand, int32_t n) {
+    DEVICEABLE constexpr int32_t dynamic_next_int_fast(Random& rand, int32_t n) {
         if ((n & -n) == n) {
             return internal::dynamic_next_int_power_of_2(rand, n);
         } else {
@@ -359,7 +359,7 @@ namespace lcg {
     }
 
     /// Does a nextLong call.
-    constexpr int64_t next_long(Random& rand) {
+    DEVICEABLE constexpr int64_t next_long(Random& rand) {
         // separate out calls due to unspecified evaluation order in C++
         int32_t hi = next<32>(rand);
         int32_t lo = next<32>(rand);
@@ -367,22 +367,22 @@ namespace lcg {
     }
 
     /// Does an unsigned nextLong call.
-    constexpr uint64_t next_ulong(Random& rand) {
+    DEVICEABLE constexpr uint64_t next_ulong(Random& rand) {
         return static_cast<uint64_t>(next_long(rand));
     }
 
     /// Does a nextBoolean call.
-    constexpr bool next_bool(Random& rand) {
+    DEVICEABLE constexpr bool next_bool(Random& rand) {
         return next<1>(rand) != 0;
     }
 
     /// Does a nextFloat call.
-    std::enable_if_t<std::numeric_limits<float>::is_iec559, float> next_float(Random& rand) {
+    DEVICEABLE std::enable_if_t<std::numeric_limits<float>::is_iec559, float> next_float(Random& rand) {
         return static_cast<float>(next<24>(rand)) * FLOAT_UNIT;
     }
 
     /// Does a nextDouble call.
-    std::enable_if_t<std::numeric_limits<double>::is_iec559, double> next_double(Random& rand) {
+    DEVICEABLE std::enable_if_t<std::numeric_limits<double>::is_iec559, double> next_double(Random& rand) {
         // separate out calls due to unspecified evaluation order in C++
         int32_t hi = next<26>(rand);
         int32_t lo = next<27>(rand);
