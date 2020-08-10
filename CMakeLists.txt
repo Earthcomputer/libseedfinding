@@ -1,9 +1,7 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.17)
 project(libseedfinding)
 
-set(CMAKE_CXX_STANDARD 14)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+set(CMAKE_CUDA_STANDARD 14)
 
 include(CheckLanguage)
 check_language(CUDA)
