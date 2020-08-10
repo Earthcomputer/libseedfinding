@@ -7,6 +7,7 @@
 #if __cplusplus < 201402L
 #error version.h requires C++ 14
 #endif
+#include <string>
 
 namespace version {
     enum Type {
@@ -22,27 +23,27 @@ namespace version {
     };
 
     inline bool operator==(const version::Version version1, const version::Version version2) {
-        return version1.id == version2.id
+        return version1.id == version2.id;
     }
 
     inline bool operator>(const version::Version version1, const version::Version version2) {
-        return version1.id > version2.id
+        return version1.id > version2.id;
     }
 
     inline bool operator<(const version::Version version1, const version::Version version2) {
-        return version1.id < version2.id
+        return version1.id < version2.id;
     }
 
     inline bool operator>=(const version::Version version1, const version::Version version2) {
-        return version1.id >= version2.id
+        return version1.id >= version2.id;
     }
 
     inline bool operator<=(const version::Version version1, const version::Version version2) {
-        return version1.id <= version2.id
+        return version1.id <= version2.id;
     }
 
     inline bool operator!=(const version::Version version1, const version::Version version2) {
-        return version1.id != version2.id
+        return version1.id != version2.id;
     }
 
     inline bool is_release(const version::Version version) {
