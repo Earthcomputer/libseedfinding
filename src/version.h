@@ -20,6 +20,47 @@ namespace version {
         Type type;
         std::string releaseTime;
     };
+
+    inline bool operator==(const version::Version version1, const version::Version version2) {
+        return version1.id == version2.id
+    }
+
+    inline bool operator>(const version::Version version1, const version::Version version2) {
+        return version1.id > version2.id
+    }
+
+    inline bool operator<(const version::Version version1, const version::Version version2) {
+        return version1.id < version2.id
+    }
+
+    inline bool operator>=(const version::Version version1, const version::Version version2) {
+        return version1.id >= version2.id
+    }
+
+    inline bool operator<=(const version::Version version1, const version::Version version2) {
+        return version1.id <= version2.id
+    }
+
+    inline bool operator!=(const version::Version version1, const version::Version version2) {
+        return version1.id != version2.id
+    }
+
+    inline bool is_release(const version::Version version) {
+        return version.type == RELEASE;
+    }
+
+    inline bool is_snapshot(const version::Version version) {
+        return version.type == SNAPSHOT;
+    }
+
+    inline bool is_beta(const version::Version version) {
+        return version.type == OLD_BETA;
+    }
+
+    inline bool is_alpha(const version::Version version) {
+        return version.type == OLD_ALPHA;
+    }
+
     const Version MC_rd_132211 = {0, OLD_ALPHA, "2009-05-13T20:11:00+00:00"};
     const Version MC_rd_132328 = {1, OLD_ALPHA, "2009-05-13T21:28:00+00:00"};
     const Version MC_rd_20090515 = {2, OLD_ALPHA, "2009-05-14T22:00:00+00:00"};
@@ -561,6 +602,7 @@ namespace version {
     const Version MC_1_16_2_pre3 = {538, SNAPSHOT, "2020-08-06T16:44:52+00:00"};
     const Version MC_1_16_2_rc1 = {539, SNAPSHOT, "2020-08-07T14:35:39+00:00"};
     const Version MC_1_16_2_rc2 = {540, SNAPSHOT, "2020-08-10T11:43:36+00:00"};
+
 
 }
 #endif //SEEDFINDING_VERSION_H
