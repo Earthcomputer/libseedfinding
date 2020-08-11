@@ -24,10 +24,10 @@ with open("version_manifest.json") as file:
     versions.reverse()
     typf=lambda typ:"SNAPSHOT" if typ=="snapshot" else "RELEASE" if typ=="release" else "OLD_ALPHA" if typ=="old_alpha" else "OLD_BETA" if typ=="old_beta" else "NONE"
     for i,version in enumerate(versions):
-        text.append("\tconst Version","MC_"+version.get("id").replace(".","_").replace("-","_").replace(" ","_"),"= {",i,",",typf(version.get("type")),",",'"'+version.get("releaseTime")+'"',"};")
+        text.append("const Version MC_"+version.get("id").replace(".","_").replace("-","_").replace(" ","_")+" = {"+str(i)+","+typf(version.get("type"))+',"'+version.get("releaseTime")+'"};')
 
 
 
-with fileinput.FileInput(filename, inplace=True, backup='.bak') as file:
+with fileinput.FileInput("../src/version.h", inplace=True, backup='.bak') as file:
     for line in file:
-        print(line.replace("/////////////////////////GENERATION////////////////////////////////", os.linesep.join(text)), end='')
+        print(line.replace("/////////////////////////GENERATION////////////////////////////////", (os.linesep+"\t").join(text)), end='')
