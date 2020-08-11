@@ -97,7 +97,6 @@ namespace lcg {
         // coprimes, i.e., gcd(a, m) = 1
         // stolen code, now handles the case where gcd(a,m) != 1
         DEVICEABLE FORCEINLINE constexpr uint64_t euclidean_helper(uint64_t a, uint64_t m) {
-            uint64_t m0 = m;
             uint64_t y = 0, x = 1;
             if (m == 1) {
                 return 0;
@@ -117,7 +116,7 @@ namespace lcg {
 
         DEVICEABLE FORCEINLINE constexpr uint64_t theta(uint64_t num) {
             if (num % 4 == 3) {
-                num = (1L << 50) - num;
+                num = (1LL << 50) - num;
             }
 
             // xhat = num
