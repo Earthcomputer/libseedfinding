@@ -11,3 +11,8 @@ CTestTestfile.cmake
 _deps
 
 .idea/
+
+*.cbp
+cmake-build-debug
+src/version.h.bak
+src/version.h
