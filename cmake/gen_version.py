@@ -37,10 +37,7 @@ with open("version_manifest.json") as file:
         text.append("const Version MC_" + version.get("id").replace(".", "_").replace("-", "_").replace(" ", "_") +
                     " = {" + str(i) + ", " + typf(version.get("type")) + ', "' + version.get("releaseTime") + '"}; ')
 
-# restore old version.h in case of resync of cmake
-if os.path.isfile('../src/version.h.bak'):
-    print("Detected a backup, restoring it to replace to regenerate version.h")
-    shutil.copyfile('../src/version.h.bak', '../src/version.h')
-with fileinput.FileInput("../src/version.h", inplace=True, backup='.bak') as file:
-    for line in file:
-        print(line.replace("/////////////////////////GENERATION////////////////////////////////", (os.linesep + "\t").join(text)), end='')
+with open('../src/version.h.template') as file:
+    with open('../src/version.h', 'w') as out:
+        for line in file:
+            out.write(line.replace("/////////////////////////GENERATION////////////////////////////////", (os.linesep + "\t").join(text)))

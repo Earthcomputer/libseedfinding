@@ -8,6 +8,7 @@
 #error version.h requires C++ 14
 #endif
 #include <string>
+#include "util.h"
 
 namespace version {
     enum Type {
@@ -22,43 +23,43 @@ namespace version {
         std::string releaseTime;
     };
 
-    inline bool operator==(const version::Version version1, const version::Version version2) {
+    DEVICEABLE inline bool operator==(const version::Version version1, const version::Version version2) {
         return version1.id == version2.id;
     }
 
-    inline bool operator>(const version::Version version1, const version::Version version2) {
+    DEVICEABLE inline bool operator>(const version::Version version1, const version::Version version2) {
         return version1.id > version2.id;
     }
 
-    inline bool operator<(const version::Version version1, const version::Version version2) {
+    DEVICEABLE inline bool operator<(const version::Version version1, const version::Version version2) {
         return version1.id < version2.id;
     }
 
-    inline bool operator>=(const version::Version version1, const version::Version version2) {
+    DEVICEABLE inline bool operator>=(const version::Version version1, const version::Version version2) {
         return version1.id >= version2.id;
     }
 
-    inline bool operator<=(const version::Version version1, const version::Version version2) {
+    DEVICEABLE inline bool operator<=(const version::Version version1, const version::Version version2) {
         return version1.id <= version2.id;
     }
 
-    inline bool operator!=(const version::Version version1, const version::Version version2) {
+    DEVICEABLE inline bool operator!=(const version::Version version1, const version::Version version2) {
         return version1.id != version2.id;
     }
 
-    inline bool is_release(const version::Version version) {
+    DEVICEABLE inline bool is_release(const version::Version version) {
         return version.type == RELEASE;
     }
 
-    inline bool is_snapshot(const version::Version version) {
+    DEVICEABLE inline bool is_snapshot(const version::Version version) {
         return version.type == SNAPSHOT;
     }
 
-    inline bool is_beta(const version::Version version) {
+    DEVICEABLE inline bool is_beta(const version::Version version) {
         return version.type == OLD_BETA;
     }
 
-    inline bool is_alpha(const version::Version version) {
+    DEVICEABLE inline bool is_alpha(const version::Version version) {
         return version.type == OLD_ALPHA;
     }
 

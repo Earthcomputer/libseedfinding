@@ -14,5 +14,4 @@ _deps
 
 *.cbp
 cmake-build-debug
-src/version.h.bak
 src/version.h
