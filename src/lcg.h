@@ -157,13 +157,6 @@ namespace lcg {
             return xhat_lo;
         }
 
-        // Computes nextInt(N) for the case where N is a power of 2. Declared to avoid duplicate code.
-        // Use the more generic public version, they will compile to the same thing.
-        template<int32_t N>
-        DEVICEABLE constexpr std::enable_if_t<(N > 0 && (N & -N) == N), int32_t> next_int_power_of_2(Random& rand) {
-            return static_cast<int32_t>((static_cast<uint64_t>(next<31>(rand)) * static_cast<uint64_t>(N)) >> 31);
-        }
-
         DEVICEABLE constexpr int32_t dynamic_next_int_power_of_2(Random& rand, int32_t n) {
             return static_cast<int32_t>((static_cast<uint64_t>(next<31>(rand)) * static_cast<uint64_t>(n)) >> 31);
         }
@@ -302,18 +295,19 @@ namespace lcg {
 
     /// Does a bounded nextInt call with bound N.
     template<int32_t N>
-    DEVICEABLE constexpr typename std::enable_if_t<(N > 0), int32_t> next_int(Random& rand) {
-        if ((N & -N) == N) {
-            return internal::next_int_power_of_2<N>(rand);
-        } else {
-            int32_t bits = next<31>(rand);
-            int32_t val = bits % N;
-            while (bits - val + (N-1) < 0) {
-                bits = next<31>(rand);
-                val = bits % N;
-            }
-            return val;
+    DEVICEABLE constexpr typename std::enable_if_t<(N > 0) && ((N & -N) == N), int32_t> next_int(Random& rand) {
+        return static_cast<int32_t>((static_cast<uint64_t>(next<31>(rand)) * static_cast<uint64_t>(N)) >> 31);
+    }
+
+    template<int32_t N>
+    DEVICEABLE constexpr typename std::enable_if_t<(N > 0) && ((N & -N) != N), int32_t> next_int(Random& rand) {
+        int32_t bits = next<31>(rand);
+        int32_t val = bits % N;
+        while (bits - val + (N-1) < 0) {
+            bits = next<31>(rand);
+            val = bits % N;
         }
+        return val;
     }
 
     /**
@@ -324,7 +318,7 @@ namespace lcg {
     template<int32_t N>
     DEVICEABLE constexpr typename std::enable_if_t<(N > 0), int32_t> next_int_fast(Random& rand) {
         if ((N & -N) == N) {
-            return internal::next_int_power_of_2<N>(rand);
+            return next_int<N>(rand);
         } else {
             return next<31>(rand) % N;
         }
