@@ -20,36 +20,39 @@ endif()
 set_and_check(LIBSEEDFINDING_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_FULL_INCLUDEDIR@")
 # Lets the end-user find the header path with the header appended
 # This is helpful if you're using Cmake's pre-compiled header feature
-set_and_check(LIBSEEDFINDING_HEADER_PATH "@PACKAGE_CMAKE_INSTALL_FULL_INCLUDEDIR@/LIBSEEDFINDING.h")
+set_and_check(LIBSEEDFINDING_HEADER_PATH "@PACKAGE_CMAKE_INSTALL_FULL_INCLUDEDIR@/lcg.h")
+set_and_check(LIBSEEDFINDING_HEADER_PATH "@PACKAGE_CMAKE_INSTALL_FULL_INCLUDEDIR@/simplex.h")
+set_and_check(LIBSEEDFINDING_HEADER_PATH "@PACKAGE_CMAKE_INSTALL_FULL_INCLUDEDIR@/util.h")
+set_and_check(LIBSEEDFINDING_HEADER_PATH "@PACKAGE_CMAKE_INSTALL_FULL_INCLUDEDIR@/version.h")
 
 # Brings in the target library
-include("${CMAKE_CURRENT_LIST_DIR}/LIBSEEDFINDINGTargets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/libseedfindingTargets.cmake")
 
-# Ouputs a "found LIBSEEDFINDING /usr/include/LIBSEEDFINDING.h" message when using find_package(LIBSEEDFINDING)
+# Ouputs a "found lcg /usr/include/lcg.h ..." message when using find_package(LIBSEEDFINDING)
 include(FindPackageMessage)
-if(TARGET LIBSEEDFINDING::LIBSEEDFINDING)
+if(TARGET libseedfinding::libseedfinding)
 	set(LIBSEEDFINDING_FOUND TRUE)
 
 	# Since the compiled version has a lib, show that in the message
 	if(@LIBSEEDFINDING_COMPILE@)
 		# The list of configurations is most likely just 1 unless they installed a debug & release
-		get_target_property(_LIBSEEDFINDING_configs LIBSEEDFINDING::LIBSEEDFINDING "IMPORTED_CONFIGURATIONS")
+		get_target_property(_libseedfinding_configs libseedfinding::libseedfinding "IMPORTED_CONFIGURATIONS")
 		# Need to loop since the "IMPORTED_LOCATION" property isn't want we want.
 		# Instead, we need to find the IMPORTED_LOCATION_RELEASE or IMPORTED_LOCATION_DEBUG which has the lib path.
-		foreach(_LIBSEEDFINDING_conf "${_LIBSEEDFINDING_configs}")
+		foreach(_libseedfinding_conf "${_libseedfinding_configs}")
 			# Grab the path to the lib and sets it to LIBSEEDFINDING_LIBRARY
-			get_target_property(LIBSEEDFINDING_LIBRARY LIBSEEDFINDING::LIBSEEDFINDING "IMPORTED_LOCATION_${_LIBSEEDFINDING_conf}")
+			get_target_property(LIBSEEDFINDING_LIBRARY libseedfinding::libseedfinding "IMPORTED_LOCATION_${_libseedfinding_conf}")
 			# Check if we found it
 			if(LIBSEEDFINDING_LIBRARY)
 				break()
 			endif()
 		endforeach()
 
-		unset(_LIBSEEDFINDING_configs)
-		unset(_LIBSEEDFINDING_conf)
+		unset(_libseedfinding_configs)
+		unset(_libseedfinding_conf)
 
-		find_package_message(LIBSEEDFINDING "Found LIBSEEDFINDING: ${LIBSEEDFINDING_LIBRARY} (found version \"${LIBSEEDFINDING_VERSION}\")" "[${LIBSEEDFINDING_LIBRARY}][${LIBSEEDFINDING_HEADER_PATH}]")
+		find_package_message(libseedfinding "Found libseedfinding: ${LIBSEEDFINDING_LIBRARY} (found version \"${LIBSEEDFINDING_VERSION}\")" "[${LIBSEEDFINDING_LIBRARY}][${LIBSEEDFINDING_HEADER_PATH}]")
 	else()
-		find_package_message(LIBSEEDFINDING "Found LIBSEEDFINDING: ${LIBSEEDFINDING_HEADER_PATH} (found version \"${LIBSEEDFINDING_VERSION}\")" "[${LIBSEEDFINDING_HEADER_PATH}]")
+		find_package_message(libseedfinding "Found libseedfinding: ${LIBSEEDFINDING_HEADER_PATH} (found version \"${LIBSEEDFINDING_VERSION}\")" "[${LIBSEEDFINDING_HEADER_PATH}]")
 	endif()
 endif()
