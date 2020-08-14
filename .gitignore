@@ -16,3 +16,4 @@ build/
 cmake-build-debug
 *.cbp
 version.h
+example/main
