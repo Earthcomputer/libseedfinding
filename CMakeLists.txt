@@ -259,4 +259,8 @@ install(EXPORT libseedfindingTargets
         DESTINATION ${_TARGET_INSTALL_CMAKEDIR}
         )
 
-add_subdirectory(example)
+if (LIBSEEDFINDING_IS_USING_CUDA)
+    add_subdirectory(test_cuda)
+else ()
+    add_subdirectory(test_cpp)
+endif ()

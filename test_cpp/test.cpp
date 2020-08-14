@@ -21,6 +21,7 @@ void test_version_cmp(){
 int main() {
     test_lcg();
     test_version();
+    test_version_cmp();
     std::cout << "All tests have been run" << std::endl;
     return 0;
 }
