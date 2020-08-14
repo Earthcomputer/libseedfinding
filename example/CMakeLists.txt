@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.14.0 FATAL_ERROR)
+project(seedfinding_example LANGUAGES CXX)
 find_package(libseedfinding)
 add_executable(main main.cpp)
 target_link_libraries(main libseedfinding::libseedfinding)

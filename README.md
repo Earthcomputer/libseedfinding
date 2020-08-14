@@ -24,3 +24,18 @@ cd build
 cmake ..
 runas /user:Administrator "cmake --build . --config Release --target install"
 ```
+
+# Usage
+
+See example/
+
+# Development
+
+Create new .h in src and add them in the CmakeLists.txt in the install part as well as in the in config
+
+
+# Bugs and untested
+
+So far the cuda build is not tested
+
+So far the standalone executable is not tested
