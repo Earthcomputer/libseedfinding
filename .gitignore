@@ -15,3 +15,4 @@ _deps
 build/
 cmake-build-debug
 *.cbp
+version.h
