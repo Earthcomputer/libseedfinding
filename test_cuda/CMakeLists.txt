@@ -1,1 +1,1 @@
-add_executable(libseedfinding_test test.cu)
+add_executable(test test.cu)
