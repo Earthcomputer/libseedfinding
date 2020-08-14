@@ -69,7 +69,7 @@ endif ()
 if (_git_tag_error OR NOT Git_FOUND)
     message(WARNING "cpp-libseedfinding failed to find the latest Git tag, falling back to using the version in the header file.")
     # This is so the we can only bother to update the header
-    file(STRINGS src/dummy.cpp _raw_version_string REGEX ".*version.*([0-9]+.?)+")
+    file(STRINGS src/util.h _raw_version_string REGEX ".*version.*([0-9]+.?)+")
 endif ()
 # Needed since git tags have "v" prefixing them.
 # Also used if the fallback to user agent string is being used.
@@ -108,7 +108,7 @@ if (BUILD_SHARED_LIBS AND WIN32 AND LIBSEEDFINDING_COMPILE)
 endif ()
 
 # populate the version.h
-option(LIBSEEDFINDING_UPDATE_VERSION "Download the version manifest from mojang and write it to version.h" OFF)
+option(LIBSEEDFINDING_UPDATE_VERSION "Download the version manifest from mojang and write it to version.h" ON)
 if (LIBSEEDFINDING_UPDATE_VERSION)
     find_package(Python COMPONENTS Interpreter Development)
     if (Python_FOUND)
