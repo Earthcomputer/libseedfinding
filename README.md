@@ -8,7 +8,7 @@ It can be linked like so:
 
 `target_link_libraries(your_exe libseedfinding::libseedfinding)`
 
-The following will build & install for later use.
+The following will build & install for later use. (you can also do `cmake . && make install_libseedfinding`)
 
 Linux/macOS:
 ```

@@ -264,3 +264,11 @@ if (LIBSEEDFINDING_IS_USING_CUDA)
 else ()
     add_subdirectory(test_cpp)
 endif ()
+
+
+add_custom_target(install_${PROJECT_NAME}
+        sudo "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target install
+        DEPENDS ${PROJECT_NAME}
+        COMMENT "Installing ${PROJECT_NAME}"
+        SOURCES src/lcg.h src/util.h src/simplex.h src/kernels.cuh src/version.h
+        USES_TERMINAL)
