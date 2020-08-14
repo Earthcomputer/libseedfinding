@@ -12,8 +12,6 @@ _deps
 
 .idea/
 
-*.cbp
-cmake-build-debug
-src/version.h.bak
-src/version.h
 build/
+cmake-build-debug
+*.cbp

@@ -1,0 +1,70 @@
+// Copyright (c) The Minecraft Seed Finding Team
+//
+// MIT License
+
+#ifndef SEEDFINDING_VERSION_H
+#define SEEDFINDING_VERSION_H
+#if __cplusplus < 201402L
+#error version.h requires C++ 14
+#endif
+#include <string>
+#include "util.h"
+
+namespace version {
+    enum Type {
+        RELEASE,
+        SNAPSHOT,
+        OLD_ALPHA,
+        OLD_BETA
+    };
+    struct Version {
+        int id;
+        Type type;
+        std::string releaseTime;
+    };
+
+    DEVICEABLE inline bool operator==(const version::Version version1, const version::Version version2) {
+        return version1.id == version2.id;
+    }
+
+    DEVICEABLE inline bool operator>(const version::Version version1, const version::Version version2) {
+        return version1.id > version2.id;
+    }
+
+    DEVICEABLE inline bool operator<(const version::Version version1, const version::Version version2) {
+        return version1.id < version2.id;
+    }
+
+    DEVICEABLE inline bool operator>=(const version::Version version1, const version::Version version2) {
+        return version1.id >= version2.id;
+    }
+
+    DEVICEABLE inline bool operator<=(const version::Version version1, const version::Version version2) {
+        return version1.id <= version2.id;
+    }
+
+    DEVICEABLE inline bool operator!=(const version::Version version1, const version::Version version2) {
+        return version1.id != version2.id;
+    }
+
+    DEVICEABLE inline bool is_release(const version::Version version) {
+        return version.type == RELEASE;
+    }
+
+    DEVICEABLE inline bool is_snapshot(const version::Version version) {
+        return version.type == SNAPSHOT;
+    }
+
+    DEVICEABLE inline bool is_beta(const version::Version version) {
+        return version.type == OLD_BETA;
+    }
+
+    DEVICEABLE inline bool is_alpha(const version::Version version) {
+        return version.type == OLD_ALPHA;
+    }
+
+    /////////////////////////GENERATION////////////////////////////////
+
+
+}
+#endif //SEEDFINDING_VERSION_H
