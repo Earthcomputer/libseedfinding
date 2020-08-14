@@ -39,7 +39,7 @@ with open("version_manifest.json") as file:
 
 # restore old version.h in case of resync of cmake
 if os.path.isfile('../src/version.h.bak'):
-    print("Detected a backup, restoring it to replace to regenerate version.h")
+    print("Detected a backup, restoring it to regenerate version.h")
     shutil.copyfile('../src/version.h.bak', '../src/version.h')
 with fileinput.FileInput("../src/version.h", inplace=True, backup='.bak') as file:
     for line in file:
