@@ -5,8 +5,16 @@
 #ifndef LIBSEEDFINDING_LCG_H
 #define LIBSEEDFINDING_LCG_H
 
-#if __cplusplus < 201402L || (defined(_MSVC_LANG) && _MSVC_LANG < 201402L)
-#error lcg.h requires C++ 14
+#include <stdio.h>
+
+#if defined(_MSVC_LANG)
+    #if _MSVC_LANG < 201402L
+        #error lcg.h requires C++ 14
+    #endif
+#else
+    #if __cplusplus < 201402L
+        #error lcg.h requires C++ 14
+    #endif
 #endif
 
 #include <cinttypes>
@@ -33,7 +41,7 @@ namespace lcg {
 
     // Declared here for forward reference
     template<int B>
-    DEVICEABLE constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random& rand);
+    DEVICEABLE constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random &rand);
 
     /**
      * Contains internal functions. These are unstable, do not use them for any reason!
@@ -157,7 +165,7 @@ namespace lcg {
             return xhat_lo;
         }
 
-        DEVICEABLE constexpr int32_t dynamic_next_int_power_of_2(Random& rand, int32_t n) {
+        DEVICEABLE constexpr int32_t dynamic_next_int_power_of_2(Random &rand, int32_t n) {
             return static_cast<int32_t>((static_cast<uint64_t>(next<31>(rand)) * static_cast<uint64_t>(n)) >> 31);
         }
     }
@@ -165,20 +173,20 @@ namespace lcg {
 
     /// Advances the Random by an unsigned N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
     template<uint64_t N = 1>
-    DEVICEABLE constexpr void uadvance(Random& rand) {
+    DEVICEABLE constexpr void uadvance(Random &rand) {
         internal::LCG lcg = internal::combine(N);
         rand = (rand * lcg.multiplier + lcg.addend) & MASK;
     }
 
     /// Advances the Random by N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
     template<int64_t N = 1>
-    DEVICEABLE constexpr void advance(Random& rand) {
+    DEVICEABLE constexpr void advance(Random &rand) {
         uadvance<static_cast<uint64_t>(N)>(rand);
     }
 
     /// Force-inlined version of dynamic_advance. Do not use unless profiling tells you that the compiler is not inlining anyway!
-    DEVICEABLE FORCEINLINE constexpr void dynamic_advance_inline(Random& rand, uint64_t n) {
-        #define ADVANCE_BIT(N) if (n < (1LL << N)) return;\
+    DEVICEABLE FORCEINLINE constexpr void dynamic_advance_inline(Random &rand, uint64_t n) {
+#define ADVANCE_BIT(N) if (n < (1LL << N)) return;\
            if (n & (1LL << N)) uadvance<1LL << N>(rand);
         ADVANCE_BIT(0)
         ADVANCE_BIT(1)
@@ -228,21 +236,21 @@ namespace lcg {
         ADVANCE_BIT(45)
         ADVANCE_BIT(46)
         ADVANCE_BIT(47)
-        #undef ADVANCE_BIT
+#undef ADVANCE_BIT
     }
 
     /// Advances the Random by an unsigned n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
-    DEVICEABLE constexpr void dynamic_advance(Random& rand, uint64_t n) {
+    DEVICEABLE constexpr void dynamic_advance(Random &rand, uint64_t n) {
         dynamic_advance_inline(rand, n);
     }
 
     /// Force-inlined version of dynamic_advance. Do not use unless profiling tells you that the compiler is not inlining anyway!
-    DEVICEABLE FORCEINLINE constexpr void dynamic_advance_inline(Random& rand, int64_t n) {
+    DEVICEABLE FORCEINLINE constexpr void dynamic_advance_inline(Random &rand, int64_t n) {
         dynamic_advance_inline(rand, static_cast<uint64_t>(n));
     }
 
     /// Advances the Random by n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
-    DEVICEABLE constexpr void dynamic_advance(Random& rand, int64_t n) {
+    DEVICEABLE constexpr void dynamic_advance(Random &rand, int64_t n) {
         dynamic_advance_inline(rand, n);
     }
 
@@ -283,27 +291,27 @@ namespace lcg {
 
     /// Advances the LCG and gets the upper B bits from it.
     template<int B>
-    DEVICEABLE constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random& rand) {
+    DEVICEABLE constexpr typename std::enable_if_t<(0 <= B && B <= 32), int32_t> next(Random &rand) {
         advance(rand);
         return static_cast<int32_t>(rand >> (48 - B));
     }
 
     /// Does an unbounded nextInt call and returns the result.
-    DEVICEABLE constexpr int32_t next_int_unbounded(Random& rand) {
+    DEVICEABLE constexpr int32_t next_int_unbounded(Random &rand) {
         return next<32>(rand);
     }
 
     /// Does a bounded nextInt call with bound N.
     template<int32_t N>
-    DEVICEABLE constexpr typename std::enable_if_t<(N > 0) && ((N & -N) == N), int32_t> next_int(Random& rand) {
+    DEVICEABLE constexpr typename std::enable_if_t<(N > 0) && ((N & -N) == N), int32_t> next_int(Random &rand) {
         return static_cast<int32_t>((static_cast<uint64_t>(next<31>(rand)) * static_cast<uint64_t>(N)) >> 31);
     }
 
     template<int32_t N>
-    DEVICEABLE constexpr typename std::enable_if_t<(N > 0) && ((N & -N) != N), int32_t> next_int(Random& rand) {
+    DEVICEABLE constexpr typename std::enable_if_t<(N > 0) && ((N & -N) != N), int32_t> next_int(Random &rand) {
         int32_t bits = next<31>(rand);
         int32_t val = bits % N;
-        while (bits - val + (N-1) < 0) {
+        while (bits - val + (N - 1) < 0) {
             bits = next<31>(rand);
             val = bits % N;
         }
@@ -316,7 +324,7 @@ namespace lcg {
      * function is extremely likely to have the same effect as next_int.
      */
     template<int32_t N>
-    DEVICEABLE constexpr typename std::enable_if_t<(N > 0), int32_t> next_int_fast(Random& rand) {
+    DEVICEABLE constexpr typename std::enable_if_t<(N > 0), int32_t> next_int_fast(Random &rand) {
         if ((N & -N) == N) {
             return next_int<N>(rand);
         } else {
@@ -325,13 +333,13 @@ namespace lcg {
     }
 
     /// Does a bounded nextInt call with bound n, used when n is not known in advance.
-    DEVICEABLE constexpr int32_t dynamic_next_int(Random& rand, int32_t n) {
+    DEVICEABLE constexpr int32_t dynamic_next_int(Random &rand, int32_t n) {
         if ((n & -n) == n) {
             return internal::dynamic_next_int_power_of_2(rand, n);
         } else {
             int32_t bits = next<31>(rand);
             int32_t val = bits % n;
-            while (bits - val + (n-1) < 0) {
+            while (bits - val + (n - 1) < 0) {
                 bits = next<31>(rand);
                 val = bits % n;
             }
@@ -343,7 +351,7 @@ namespace lcg {
      * Does a bounded nextInt call with bound n, using the "fast" approach, used when n is not known in advance.
      * See next_int_fast for a description of the fast approach.
      */
-    DEVICEABLE constexpr int32_t dynamic_next_int_fast(Random& rand, int32_t n) {
+    DEVICEABLE constexpr int32_t dynamic_next_int_fast(Random &rand, int32_t n) {
         if ((n & -n) == n) {
             return internal::dynamic_next_int_power_of_2(rand, n);
         } else {
@@ -352,7 +360,7 @@ namespace lcg {
     }
 
     /// Does a nextLong call.
-    DEVICEABLE constexpr int64_t next_long(Random& rand) {
+    DEVICEABLE constexpr int64_t next_long(Random &rand) {
         // separate out calls due to unspecified evaluation order in C++
         int32_t hi = next<32>(rand);
         int32_t lo = next<32>(rand);
@@ -360,22 +368,22 @@ namespace lcg {
     }
 
     /// Does an unsigned nextLong call.
-    DEVICEABLE constexpr uint64_t next_ulong(Random& rand) {
+    DEVICEABLE constexpr uint64_t next_ulong(Random &rand) {
         return static_cast<uint64_t>(next_long(rand));
     }
 
     /// Does a nextBoolean call.
-    DEVICEABLE constexpr bool next_bool(Random& rand) {
+    DEVICEABLE constexpr bool next_bool(Random &rand) {
         return next<1>(rand) != 0;
     }
 
     /// Does a nextFloat call.
-    DEVICEABLE std::enable_if_t<std::numeric_limits<float>::is_iec559, float> next_float(Random& rand) {
+    DEVICEABLE std::enable_if_t<std::numeric_limits<float>::is_iec559, float> next_float(Random &rand) {
         return static_cast<float>(next<24>(rand)) * FLOAT_UNIT;
     }
 
     /// Does a nextDouble call.
-    DEVICEABLE std::enable_if_t<std::numeric_limits<double>::is_iec559, double> next_double(Random& rand) {
+    DEVICEABLE std::enable_if_t<std::numeric_limits<double>::is_iec559, double> next_double(Random &rand) {
         // separate out calls due to unspecified evaluation order in C++
         int32_t hi = next<26>(rand);
         int32_t lo = next<27>(rand);

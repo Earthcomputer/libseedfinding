@@ -51,7 +51,7 @@
 	ARCH_INDEPENDENT option of write_basic_package_version_file() requires Cmake v3.14
 ]]
 cmake_minimum_required(VERSION 3.14.0 FATAL_ERROR)
-
+set(CMAKE_VERBOSE_MAKEFILE ON)
 # On systems without Git installed, there were errors since execute_process seemed to not throw an error without it?
 # Also to not check out the version.h its needed
 find_package(Git QUIET)
@@ -90,6 +90,7 @@ if (LIBSEEDFINDING_USE_CUDA)
     endif ()
 else ()
     project(libseedfinding VERSION ${_libseedfinding_version} LANGUAGES CXX)
+    set(CMAKE_CXX_STANDARD 14)
 endif ()
 
 # Lets you compile the program as a regular library instead of header-only
