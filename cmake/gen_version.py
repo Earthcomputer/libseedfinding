@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 # -*- coding=utf-8 -*- pyversions=2.6+,3.3+
 import json
-import urllib.request
-from urllib.error import HTTPError, URLError
+try: #python3
+    from urllib.request import urlopen
+    from urllib.error import HTTPError, URLError
+except: #python2
+    from urllib2 import urlopen
+    from urllib2 import HTTPError, URLError
+    
 import os
 import sys
 
@@ -15,7 +20,7 @@ path = sys.argv[1]
 def download_file(url, filename):
     try:
         print('Downloading '+filename+'...')
-        f = urllib.request.urlopen(url)
+        f = urlopen(url)
         with open(filename, 'wb+') as local_file:
             local_file.write(f.read())
     except HTTPError as e:
