@@ -1,12 +1,9 @@
 // Copyright (c) The Minecraft Seed Finding Team
-//
+// version 1.0.1
 // MIT License
 
 #ifndef SEEDFINDING_VERSION_H
 #define SEEDFINDING_VERSION_H
-#if __cplusplus < 201402L
-#error version.h requires C++ 14
-#endif
 #include <string>
 #include "util.h"
 

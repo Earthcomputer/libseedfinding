@@ -12,6 +12,22 @@ _deps
 
 .idea/
 
-*.cbp
+build/
 cmake-build-debug
-src/version.h
+*.cbp
+version.h
+example/main
+
+*.vcxproj
+
+*.filters
+
+*.sln
+
+libseedfindingConfig.cmake
+
+libseedfindingConfigVersion.cmake
+ 
+test_cpp/
+
+x64/

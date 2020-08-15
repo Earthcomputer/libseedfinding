@@ -32,7 +32,7 @@ namespace kernels {
      * the output buffer where the given predicate matches. A single call to this kernel will only do a fraction of the
      * seed-space, to search the full seed-space, this function must be called in a loop with different offset values.
      *
-     * @tparam PREDICATE The function used to test whether a seed should be added to the buffer. This function will
+     * @tparam PREDICATE The function used to test_cuda whether a seed should be added to the buffer. This function will
      *                      always receive seeds in seed_format::SEED form, regardless of the value of INPUT_ORDER.
      *                      Must be a __device__ function.
      * @tparam INPUT_ORDER The order in which input seeds are brute-forced. Defaults to seed_format::SEED, which is the
@@ -71,7 +71,7 @@ namespace kernels {
      * seeds in bothput are also converted and written back. Note that this kernel assumes that seed 0 does not match.
      * If this is a concern, seed 0 should be tested separately on the host.
      *
-     * @tparam PREDICATE The function used to test whether a seed should be added to the buffer. This function will
+     * @tparam PREDICATE The function used to test_cuda whether a seed should be added to the buffer. This function will
      *                      always receive seeds in seed_format::SEED form, regardless of the value of INPUT_ORDER.
      *                      Must be a __device__ function.
      * @tparam INPUT_FORMAT The format of the input seeds in bothput. If not equal to seed_format::SEED, seeds in

@@ -1,5 +1,5 @@
 // Copyright (c) The Minecraft Seed Finding Team
-//
+// version 1.0.1
 // MIT License
 
 #ifndef LIBSEEDFINDING_UTIL_H

@@ -1,17 +1,26 @@
 #!/usr/bin/env python
 # -*- coding=utf-8 -*- pyversions=2.6+,3.3+
 import json
-import urllib.request
-from urllib.error import HTTPError, URLError
-import fileinput
+try: #python3
+    from urllib.request import urlopen
+    from urllib.error import HTTPError, URLError
+except: #python2
+    from urllib2 import urlopen
+    from urllib2 import HTTPError, URLError
+    
 import os
-import shutil
+import sys
+
+if len(sys.argv) != 2:
+    print("missing path as argument")
+    sys.exit(-1)
+path = sys.argv[1]
 
 
 def download_file(url, filename):
     try:
-        print(f'Downloading {filename}...')
-        f = urllib.request.urlopen(url)
+        print('Downloading '+filename+'...')
+        f = urlopen(url)
         with open(filename, 'wb+') as local_file:
             local_file.write(f.read())
     except HTTPError as e:
@@ -20,7 +29,6 @@ def download_file(url, filename):
     except URLError as e:
         print('URL Error')
         print(e)
-
 
 
 download_file("https://launchermeta.mojang.com/mc/game/version_manifest.json", "version_manifest.json")
@@ -37,7 +45,8 @@ with open("version_manifest.json") as file:
         text.append("const Version MC_" + version.get("id").replace(".", "_").replace("-", "_").replace(" ", "_") +
                     " = {" + str(i) + ", " + typf(version.get("type")) + ', "' + version.get("releaseTime") + '"}; ')
 
-with open('../src/version.h.template') as file:
-    with open('../src/version.h', 'w') as out:
+os.remove("version_manifest.json")
+with open(path + '/include/version.h.template') as file:
+    with open(path + '/include/version.h', 'w') as out:
         for line in file:
             out.write(line.replace("/////////////////////////GENERATION////////////////////////////////", (os.linesep + "\t").join(text)))
