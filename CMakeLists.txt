@@ -112,7 +112,7 @@ option(LIBSEEDFINDING_UPDATE_VERSION "Download the version manifest from mojang 
 if (LIBSEEDFINDING_UPDATE_VERSION)
     find_package(Python COMPONENTS Interpreter Development)
     if (Python_FOUND)
-        execute_process(COMMAND python ${CMAKE_HOME_DIRECTORY}/cmake/gen_version.py)
+        execute_process(COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/cmake/gen_version.py ${CMAKE_CURRENT_SOURCE_DIR})
     else ()
         error("You are missing Python the version.h was not generated")
     endif ()

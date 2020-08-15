@@ -3,9 +3,13 @@
 import json
 import urllib.request
 from urllib.error import HTTPError, URLError
-import fileinput
 import os
-import shutil
+import sys
+
+if len(sys.argv) != 2:
+    print("missing path as argument")
+    sys.exit(-1)
+path = sys.argv[1]
 
 
 def download_file(url, filename):
@@ -22,7 +26,6 @@ def download_file(url, filename):
         print(e)
 
 
-
 download_file("https://launchermeta.mojang.com/mc/game/version_manifest.json", "version_manifest.json")
 if not os.path.isfile('version_manifest.json'):
     exit(-1)
@@ -37,7 +40,9 @@ with open("version_manifest.json") as file:
         text.append("const Version MC_" + version.get("id").replace(".", "_").replace("-", "_").replace(" ", "_") +
                     " = {" + str(i) + ", " + typf(version.get("type")) + ', "' + version.get("releaseTime") + '"}; ')
 
-with open('../src/version.h.template') as file:
-    with open('../src/version.h', 'w') as out:
+os.remove("version_manifest.json")
+with open(path + '/src/version.h.template') as file:
+    with open(path + '/src/version.h', 'w') as out:
         for line in file:
-            out.write(line.replace("/////////////////////////GENERATION////////////////////////////////", (os.linesep + "\t").join(text)))
+            out.write(line.replace("/////////////////////////GENERATION////////////////////////////////",
+                                   (os.linesep + "\t").join(text)))
