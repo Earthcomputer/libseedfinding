@@ -265,10 +265,18 @@ else ()
     add_subdirectory(test_cpp)
 endif ()
 
-
-add_custom_target(install_${PROJECT_NAME}
-        sudo "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target install
-        DEPENDS ${PROJECT_NAME}
-        COMMENT "Installing ${PROJECT_NAME}"
-        SOURCES include/lcg.h include/util.h include/simplex.h include/kernels.cuh include/version.h
-        USES_TERMINAL)
+if (MSVC)
+    add_custom_target(install_${PROJECT_NAME}
+            runas /user:Administrator "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release --target install"
+            DEPENDS ${PROJECT_NAME}
+            COMMENT "Installing ${PROJECT_NAME}"
+            SOURCES include/lcg.h include/util.h include/simplex.h include/kernels.cuh include/version.h
+            USES_TERMINAL)
+else ()
+    add_custom_target(install_${PROJECT_NAME}
+            sudo "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target install
+            DEPENDS ${PROJECT_NAME}
+            COMMENT "Installing ${PROJECT_NAME}"
+            SOURCES include/lcg.h include/util.h include/simplex.h include/kernels.cuh include/version.h
+            USES_TERMINAL)
+endif ()

@@ -5,7 +5,7 @@
 #ifndef LIBSEEDFINDING_LCG_H
 #define LIBSEEDFINDING_LCG_H
 
-#if __cplusplus < 201402L
+#if __cplusplus < 201402L || (defined(_MSVC_LANG) && _MSVC_LANG < 201402L)
 #error lcg.h requires C++ 14
 #endif
 
