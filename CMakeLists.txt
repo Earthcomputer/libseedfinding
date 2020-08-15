@@ -69,7 +69,7 @@ endif ()
 if (_git_tag_error OR NOT Git_FOUND)
     message(WARNING "cpp-libseedfinding failed to find the latest Git tag, falling back to using the version in the header file.")
     # This is so the we can only bother to update the header
-    file(STRINGS src/util.h _raw_version_string REGEX ".*version.*([0-9]+.?)+")
+    file(STRINGS include/util.h _raw_version_string REGEX ".*version.*([0-9]+.?)+")
 endif ()
 # Needed since git tags have "v" prefixing them.
 # Also used if the fallback to user agent string is being used.
@@ -128,7 +128,7 @@ if (LIBSEEDFINDING_COMPILE)
             COPYONLY
             )
     # Needs to be in the same dir as the python script
-    file(GLOB SEEDFINDING_HEADERS "src/*.h")
+    file(GLOB SEEDFINDING_HEADERS "include/*.h")
     file(COPY ${SEEDFINDING_HEADERS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
     # Used outside of this if-else
@@ -270,5 +270,5 @@ add_custom_target(install_${PROJECT_NAME}
         sudo "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target install
         DEPENDS ${PROJECT_NAME}
         COMMENT "Installing ${PROJECT_NAME}"
-        SOURCES src/lcg.h src/util.h src/simplex.h src/kernels.cuh src/version.h
+        SOURCES include/lcg.h include/util.h include/simplex.h include/kernels.cuh include/version.h
         USES_TERMINAL)

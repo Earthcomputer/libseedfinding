@@ -41,8 +41,8 @@ with open("version_manifest.json") as file:
                     " = {" + str(i) + ", " + typf(version.get("type")) + ', "' + version.get("releaseTime") + '"}; ')
 
 os.remove("version_manifest.json")
-with open(path + '/src/version.h.template') as file:
-    with open(path + '/src/version.h', 'w') as out:
+with open(path + '/include/version.h.template') as file:
+    with open(path + '/include/version.h', 'w') as out:
         for line in file:
             out.write(line.replace("/////////////////////////GENERATION////////////////////////////////",
                                    (os.linesep + "\t").join(text)))
