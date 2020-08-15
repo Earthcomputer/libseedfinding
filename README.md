@@ -1,4 +1,15 @@
-LibSeedFinding
+# LibSeedFinding
+
+# Grand public usage
+
+It's recommended to use the example repository here: https://github.com/hube12/seedfinding_example which is solely a cmake file that configure and add the library as 
+a local library so the executable can be link against, the main part are the cmake/libseedfinding.cmake and the line 
+```cmake
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include(libseedfinding)
+add_dependencies(YOUR_TARGET libseedfinding)
+target_include_directories(YOUR_TARGET PUBLIC ${libseedfinding_INCLUDE_DIR})
+```
 
 # Install
 
