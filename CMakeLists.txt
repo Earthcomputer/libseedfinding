@@ -239,10 +239,10 @@ install(TARGETS ${PROJECT_NAME}
         )
 
 install(FILES
-        "${_libseedfinding_build_includedir}/src/lcg.h"
-        "${_libseedfinding_build_includedir}/src/simplex.h"
-        "${_libseedfinding_build_includedir}/src/util.h"
-        "${_libseedfinding_build_includedir}/src/version.h"
+        "${_libseedfinding_build_includedir}/include/lcg.h"
+        "${_libseedfinding_build_includedir}/include/simplex.h"
+        "${_libseedfinding_build_includedir}/include/util.h"
+        "${_libseedfinding_build_includedir}/include/version.h"
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(FILES

@@ -31,7 +31,7 @@ See example/
 
 # Development
 
-Create new .h in src and add them in the CmakeLists.txt in the install part as well as in the in config
+Create new .h in include and add them in the CmakeLists.txt in the install part as well as in the in config
 
 
 # Bugs and untested
