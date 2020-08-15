@@ -14,7 +14,7 @@ path = sys.argv[1]
 
 def download_file(url, filename):
     try:
-        print(f'Downloading {filename}...')
+        print('Downloading '+filename+'...')
         f = urllib.request.urlopen(url)
         with open(filename, 'wb+') as local_file:
             local_file.write(f.read())

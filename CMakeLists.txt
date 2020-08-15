@@ -74,6 +74,7 @@ endif ()
 # Needed since git tags have "v" prefixing them.
 # Also used if the fallback to user agent string is being used.
 string(REGEX MATCH "([0-9]+\\.?)+" _libseedfinding_version "${_raw_version_string}")
+message("Version is ${_libseedfinding_version}")
 
 option(LIBSEEDFINDING_USE_CUDA "If ON the cuda kernel will be compiled" OFF)
 if (LIBSEEDFINDING_USE_CUDA)
