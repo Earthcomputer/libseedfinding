@@ -2,7 +2,7 @@
 //
 // MIT License
 
-#include "../include//lcg.h"
+#include "../include/lcg.h"
 #include "../include/version.h"
 #include <iostream>
 
