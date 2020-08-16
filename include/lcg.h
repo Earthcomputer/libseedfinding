@@ -175,6 +175,7 @@ namespace lcg {
 
     /**
      * Contains the multiplier and addend of the LCG equivalent to advancing the Java LCG by N.
+     * N may be negative to signal a backwards advance.
      */
     template<int64_t N>
     struct combined_lcg {
@@ -190,7 +191,10 @@ namespace lcg {
         rand = (rand * ucombined_lcg<N>::multiplier + ucombined_lcg<N>::addend) & MASK;
     }
 
-    /// Advances the Random by N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
+    /**
+     * Advances the Random by N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
+     * N may be negative to signal a backwards advance.
+     */
     template<int64_t N = 1>
     DEVICEABLE constexpr void advance(Random &rand) {
         uadvance<static_cast<uint64_t>(N)>(rand);
@@ -261,7 +265,10 @@ namespace lcg {
         dynamic_advance_inline(rand, static_cast<uint64_t>(n));
     }
 
-    /// Advances the Random by n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
+    /**
+     * Advances the Random by n steps. Used when n is not known at compile-time. Runs in O(log(n)) time.
+     * n may be negative to signal a backwards advance.
+     */
     DEVICEABLE constexpr void dynamic_advance(Random &rand, int64_t n) {
         dynamic_advance_inline(rand, n);
     }
