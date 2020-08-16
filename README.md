@@ -11,10 +11,13 @@ add_dependencies(YOUR_TARGET libseedfinding)
 target_include_directories(YOUR_TARGET PUBLIC ${libseedfinding_INCLUDE_DIR})
 ```
 
-# Install
+# Install in the system
 
-After installation with Cmake, a find_package(libseedfinding) is available.
+After installation (you can use the install.bat as administrator, or the install.sh with sudo privileges) with Cmake, 
+a find_package(libseedfinding) is available.
+
 This creates a libseedfinding::libseedfinding target (if found).
+
 It can be linked like so:
 
 `target_link_libraries(your_exe libseedfinding::libseedfinding)`
@@ -38,7 +41,7 @@ runas /user:Administrator "cmake --build . --config Release --target install"
 
 # Usage
 
-See example/
+See example/ after installing
 
 # Development
 
@@ -47,6 +50,4 @@ Create new .h in include and add them in the CmakeLists.txt in the install part 
 
 # Bugs and untested
 
-So far the cuda build is not tested
-
-So far the standalone executable is not tested
+So far the standalone static library is not tested, see split.py

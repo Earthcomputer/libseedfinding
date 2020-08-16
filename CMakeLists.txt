@@ -52,21 +52,39 @@
 ]]
 cmake_minimum_required(VERSION 3.14.0 FATAL_ERROR)
 set(CMAKE_VERBOSE_MAKEFILE ON)
+
+######################## OPTIONS YOU CAN TURN OFF AND ON ################################
+# Let you use cuda capabilities
+option(LIBSEEDFINDING_USE_CUDA "If ON the cuda kernel will be compiled" OFF)
+# Let you compile the program as a regular library instead of header-only
+option(LIBSEEDFINDING_COMPILE "If ON, uses a Python script to split the header into a compilable header & source file (requires Python v3)." OFF)
+# Defaults to static library
+option(BUILD_SHARED_LIBS "Build the library as a shared library instead of static. Has no effect if using header-only." OFF)
+# populate the version.h
+option(LIBSEEDFINDING_UPDATE_VERSION "Download the version manifest from mojang and write it to version.h" ON)
+##########################################################################################
+
 # On systems without Git installed, there were errors since execute_process seemed to not throw an error without it?
 # Also to not check out the version.h its needed
 find_package(Git QUIET)
 if (Git_FOUND)
     # Gets the latest tag as a string like "v0.6.6"
     # Can silently fail if git isn't on the system
-    execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+    execute_process(COMMAND ${GIT_EXECUTABLE} ls-remote https://github.com/Earthcomputer/libseedfinding tags/*
             OUTPUT_VARIABLE _raw_version_string
-            ERROR_VARIABLE _git_tag_error)
+            ERROR_VARIABLE _git_tag_error
+            )
+    string(REGEX MATCHALL "refs/tags/[ab]([0-9]+\\.?)+" _libseedfinding_tag_list "${_raw_version_string}")
+    list(LENGTH _libseedfinding_tag_list list_tag_len)
+    math(EXPR last_tag_index "${list_tag_len} - 1")
+    list(GET _libseedfinding_tag_list ${last_tag_index} last_tag)
+    string(REGEX REPLACE "refs/tags/" "" _libseedfinding_version ${last_tag})
 endif ()
 
 # execute_process can fail silenty, so check for an error
 # if there was an error, just use the user agent as a version
 if (_git_tag_error OR NOT Git_FOUND)
-    message(WARNING "cpp-libseedfinding failed to find the latest Git tag, falling back to using the version in the header file.")
+    message(WARNING "libseedfinding failed to find the latest Git tag, falling back to using the version in the header file.")
     # This is so the we can only bother to update the header
     file(STRINGS include/util.h _raw_version_string REGEX ".*version.*([0-9]+.?)+")
 endif ()
@@ -75,8 +93,8 @@ endif ()
 string(REGEX MATCH "([0-9]+\\.?)+" _libseedfinding_version "${_raw_version_string}")
 message("Version is ${_libseedfinding_version}")
 
-option(LIBSEEDFINDING_USE_CUDA "If ON the cuda kernel will be compiled" OFF)
 if (LIBSEEDFINDING_USE_CUDA)
+    message("CUDA has been enabled, next message will tell you if it is supported")
     set(LIBSEEDFINDING_IS_USING_CUDA TRUE)
     project(libseedfinding VERSION ${_libseedfinding_version} LANGUAGES CXX CUDA)
     set(CMAKE_CUDA_STANDARD 14)
@@ -93,23 +111,19 @@ else ()
     set(CMAKE_CXX_STANDARD 14)
 endif ()
 
-# Lets you compile the program as a regular library instead of header-only
-option(LIBSEEDFINDING_COMPILE "If ON, uses a Python script to split the header into a compilable header & source file (requires Python v3)." OFF)
 # Just setting this variable here for people building in-tree
 if (LIBSEEDFINDING_COMPILE)
+    message("LibSeedFinding will be compiled")
     set(LIBSEEDFINDING_IS_COMPILED TRUE)
 endif ()
 
-# Defaults to static library
-option(BUILD_SHARED_LIBS "Build the library as a shared library instead of static. Has no effect if using header-only." OFF)
+
 if (BUILD_SHARED_LIBS AND WIN32 AND LIBSEEDFINDING_COMPILE)
     # Necessary for Windows if building shared libs
     # See https://stackoverflow.com/a/40743080
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif ()
 
-# populate the version.h
-option(LIBSEEDFINDING_UPDATE_VERSION "Download the version manifest from mojang and write it to version.h" ON)
 if (LIBSEEDFINDING_UPDATE_VERSION)
     find_package(Python COMPONENTS Interpreter Development)
     if (Python_FOUND)
