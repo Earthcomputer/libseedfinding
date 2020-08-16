@@ -54,7 +54,21 @@ See example/ after installing
 
 # Development
 
-Create new .h in include and add them in the CmakeLists.txt in the install part as well as in the in config
+Create new .h in include and add it to the CmakeLists.txt after the line 177:
+
+```cmake
+######################### LIST of all header files to include ############################
+list(APPEND LIBSEEDFINDING_HEADERS
+        "lcg.h"
+        "simplex.h"
+        "util.h"
+        "version.h")
+if (LIBSEEDFINDING_IS_USING_CUDA)
+    list(APPEND LIBSEEDFINDING_HEADERS
+            "kernels.cuh")
+endif()
+##########################################################################################
+```
 
 
 # Bugs and untested

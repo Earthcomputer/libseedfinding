@@ -64,6 +64,7 @@ option(BUILD_SHARED_LIBS "Build the library as a shared library instead of stati
 option(LIBSEEDFINDING_UPDATE_VERSION "Download the version manifest from mojang and write it to version.h" ON)
 ##########################################################################################
 
+
 # On systems without Git installed, there were errors since execute_process seemed to not throw an error without it?
 # Also to not check out the version.h its needed
 find_package(Git QUIET)
@@ -78,7 +79,7 @@ if (Git_FOUND)
     list(LENGTH _libseedfinding_tag_list list_tag_len)
     math(EXPR last_tag_index "${list_tag_len} - 1")
     list(GET _libseedfinding_tag_list ${last_tag_index} last_tag)
-    string(REGEX REPLACE "refs/tags/" "" _libseedfinding_version ${last_tag})
+    string(REGEX REPLACE "refs/tags/" "" _raw_version_string ${last_tag})
 endif ()
 
 # execute_process can fail silenty, so check for an error
@@ -95,7 +96,6 @@ message("Version is ${_libseedfinding_version}")
 
 if (LIBSEEDFINDING_USE_CUDA)
     message("CUDA has been enabled, next message will tell you if it is supported")
-    set(LIBSEEDFINDING_IS_USING_CUDA TRUE)
     project(libseedfinding VERSION ${_libseedfinding_version} LANGUAGES CXX CUDA)
     set(CMAKE_CUDA_STANDARD 14)
     include(CheckLanguage)
@@ -103,6 +103,7 @@ if (LIBSEEDFINDING_USE_CUDA)
     if (CMAKE_CUDA_COMPILER)
         enable_language(CUDA)
         message(STATUS "CUDA support")
+        set(LIBSEEDFINDING_IS_USING_CUDA TRUE)
     else ()
         message(STATUS "No CUDA support")
     endif ()
@@ -172,6 +173,27 @@ else ()
     add_library(${PROJECT_NAME} INTERFACE)
     set(_libseedfinding_build_includedir "${CMAKE_CURRENT_SOURCE_DIR}")
 endif ()
+
+######################### LIST of all header files to include ############################
+list(APPEND LIBSEEDFINDING_HEADERS
+        "lcg.h"
+        "simplex.h"
+        "util.h"
+        "version.h")
+if (LIBSEEDFINDING_IS_USING_CUDA)
+    list(APPEND LIBSEEDFINDING_HEADERS
+            "kernels.cuh")
+endif()
+##########################################################################################
+
+foreach(header ${LIBSEEDFINDING_HEADERS})
+    list(APPEND libseedfinding_headers "${_libseedfinding_build_includedir}/include/${header}")
+endforeach(header)
+
+message("The selected headers are: ${LIBSEEDFINDING_HEADERS}.")
+
+
+
 # Lets you address the target with libseedfinding::libseedfinding
 # Only useful if building in-tree, versus using it from an installation.
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
@@ -244,12 +266,12 @@ install(TARGETS ${PROJECT_NAME}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-install(FILES
-        "${_libseedfinding_build_includedir}/include/lcg.h"
-        "${_libseedfinding_build_includedir}/include/simplex.h"
-        "${_libseedfinding_build_includedir}/include/util.h"
-        "${_libseedfinding_build_includedir}/include/version.h"
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+foreach(header ${libseedfinding_headers})
+        install(FILES
+                ${header}
+                DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    message("File ${header} will be installed if you choose to")
+endforeach(header)
 
 install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
@@ -274,13 +296,13 @@ if (MSVC)
             runas /user:Administrator "${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config Release --target install"
             DEPENDS ${PROJECT_NAME}
             COMMENT "Installing ${PROJECT_NAME}"
-            SOURCES include/lcg.h include/util.h include/simplex.h include/kernels.cuh include/version.h
+            SOURCES ${libseedfinding_headers}
             USES_TERMINAL)
 else ()
     add_custom_target(install_${PROJECT_NAME}
             sudo "${CMAKE_COMMAND}" --build "${CMAKE_BINARY_DIR}" --target install
             DEPENDS ${PROJECT_NAME}
             COMMENT "Installing ${PROJECT_NAME}"
-            SOURCES include/lcg.h include/util.h include/simplex.h include/kernels.cuh include/version.h
+            SOURCES ${libseedfinding_headers}
             USES_TERMINAL)
 endif ()
