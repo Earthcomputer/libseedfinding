@@ -60,8 +60,7 @@ if (Git_FOUND)
     # Can silently fail if git isn't on the system
     execute_process(COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
             OUTPUT_VARIABLE _raw_version_string
-            ERROR_VARIABLE _git_tag_error
-            )
+            ERROR_VARIABLE _git_tag_error)
 endif ()
 
 # execute_process can fail silenty, so check for an error
@@ -141,8 +140,7 @@ if (LIBSEEDFINDING_COMPILE)
     # Keeps the output in the build dir to not pollute the main dir
     execute_process(COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_BINARY_DIR}/split.py"
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            ERROR_VARIABLE _libseedfinding_split_error
-            )
+            ERROR_VARIABLE _libseedfinding_split_error)
     if (_libseedfinding_split_error)
         message(FATAL_ERROR "Failed when trying to split Cpp-libseedfinding with the Python script.\n${_libseedfinding_split_error}")
     endif ()
@@ -150,13 +148,11 @@ if (LIBSEEDFINDING_COMPILE)
     # split.py puts output in "out"
     set(_libseedfinding_build_includedir "${CMAKE_CURRENT_BINARY_DIR}/out")
     # This will automatically be either static or shared based on the value of BUILD_SHARED_LIBS
-
     add_library(${PROJECT_NAME} "${_libseedfinding_build_includedir}/libseedfinding.cc")
     target_sources(${PROJECT_NAME}
             PUBLIC
             $<BUILD_INTERFACE:${_libseedfinding_build_includedir}/libseedfinding.h>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/libseedfinding.h>
-            )
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/libseedfinding.h>)
 else ()
     set(_INTERFACE_OR_PUBLIC INTERFACE)
     add_library(${PROJECT_NAME} INTERFACE)
@@ -178,13 +174,11 @@ target_compile_features(${PROJECT_NAME} ${_INTERFACE_OR_PUBLIC}
         cxx_decltype
         cxx_deleted_functions
         cxx_range_for
-        cxx_sizeof_member
-        )
+        cxx_sizeof_member)
 
 target_include_directories(${PROJECT_NAME} ${_INTERFACE_OR_PUBLIC}
         $<BUILD_INTERFACE:${_libseedfinding_build_includedir}>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-        )
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 # here we could set what libraries we depend on
 target_link_libraries(${PROJECT_NAME} ${_INTERFACE_OR_PUBLIC})
@@ -211,15 +205,13 @@ configure_package_config_file("${PROJECT_NAME}Config.cmake.in"
         # Passes the includedir install path
         PATH_VARS CMAKE_INSTALL_FULL_INCLUDEDIR
         # There aren't any components, so don't use the macro
-        NO_CHECK_REQUIRED_COMPONENTS_MACRO
-        )
+        NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
 if (LIBSEEDFINDING_COMPILE)
     write_basic_package_version_file("${PROJECT_NAME}ConfigVersion.cmake"
             # Example: if you find_package(libseedfinding 0.5.4)
             # then anything >= 0.5 and <= 1.0 is accepted
-            COMPATIBILITY SameMajorVersion
-            )
+            COMPATIBILITY SameMajorVersion)
 else ()
     write_basic_package_version_file("${PROJECT_NAME}ConfigVersion.cmake"
             # Example: if you find_pacrkage(libseedfinding 0.5.4)
@@ -227,8 +219,7 @@ else ()
             COMPATIBILITY SameMajorVersion
             # Tells Cmake that it's a header-only lib
             # Mildly useful for end-users :)
-            ARCH_INDEPENDENT
-            )
+            ARCH_INDEPENDENT)
 endif ()
 
 # Creates the export libseedfindingTargets.cmake
@@ -237,8 +228,7 @@ endif ()
 install(TARGETS ${PROJECT_NAME}
         EXPORT libseedfindingTargets
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        )
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(FILES
         "${_libseedfinding_build_includedir}/include/lcg.h"
@@ -250,16 +240,14 @@ install(FILES
 install(FILES
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
         "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        DESTINATION ${_TARGET_INSTALL_CMAKEDIR}
-        )
+        DESTINATION ${_TARGET_INSTALL_CMAKEDIR})
 
 # NOTE: This path changes depending on if it's on Windows or Linux
 install(EXPORT libseedfindingTargets
         # Puts the targets into the libseedfinding namespace
         # So this makes libseedfinding::libseedfinding linkable after doing find_package(libseedfinding)
         NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${_TARGET_INSTALL_CMAKEDIR}
-        )
+        DESTINATION ${_TARGET_INSTALL_CMAKEDIR})
 
 if (LIBSEEDFINDING_IS_USING_CUDA)
     add_subdirectory(test_cuda)

@@ -34,10 +34,17 @@ namespace lcg {
     const uint64_t ADDEND = 0xbLL;
     const uint64_t MASK = 0xffffffffffffL;
 
+#if defined(__CUDACC__)
     /// The minimum distance that two nextFloat values can be from each other. May be used to iterate over all valid floats.
-    const float FLOAT_UNIT = 1.0f / static_cast<float>(1L << 24);
+    static __constant__ __device__  float FLOAT_UNIT_DEV = 1.0f / static_cast<float>(1L << 24);
     /// The minimum distance that two nextDouble values can be from each other. May be used to iterate over all valid doubles.
-    const double DOUBLE_UNIT = 1.0 / static_cast<double>(1LL << 53);
+    static __constant__ __device__  double DOUBLE_UNIT_DEV = 1.0 / static_cast<double>(1LL << 53);
+#endif
+
+    /// The minimum distance that two nextFloat values can be from each other. May be used to iterate over all valid floats.
+    static const float FLOAT_UNIT = 1.0f / static_cast<float>(1L << 24);
+    /// The minimum distance that two nextDouble values can be from each other. May be used to iterate over all valid doubles.
+    static const  double DOUBLE_UNIT = 1.0 / static_cast<double>(1LL << 53);
 
     // Declared here for forward reference
     template<int B>
@@ -379,7 +386,11 @@ namespace lcg {
 
     /// Does a nextFloat call.
     DEVICEABLE std::enable_if_t<std::numeric_limits<float>::is_iec559, float> next_float(Random &rand) {
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__) // device and cuda only
+        return static_cast<float>(next<24>(rand)) * FLOAT_UNIT_DEV;
+#else
         return static_cast<float>(next<24>(rand)) * FLOAT_UNIT;
+#endif
     }
 
     /// Does a nextDouble call.
@@ -387,7 +398,11 @@ namespace lcg {
         // separate out calls due to unspecified evaluation order in C++
         int32_t hi = next<26>(rand);
         int32_t lo = next<27>(rand);
+#if defined(__CUDACC__) && defined(__CUDA_ARCH__) // device and cuda only
+        return static_cast<double>((static_cast<int64_t>(hi) << 27) + static_cast<int64_t>(lo)) * DOUBLE_UNIT_DEV;
+#else
         return static_cast<double>((static_cast<int64_t>(hi) << 27) + static_cast<int64_t>(lo)) * DOUBLE_UNIT;
+#endif
     }
 }
 
