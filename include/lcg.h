@@ -164,11 +164,30 @@ namespace lcg {
     }
 
 
+    /// Unsigned equivalent of combined_lcg<N>.
+    template<uint64_t N>
+    struct ucombined_lcg {
+        /// The multiplier of the LCG that advances by N.
+        static const uint64_t multiplier = internal::combine(N).multiplier;
+        /// The addend of the LCG that advances by N.
+        static const uint64_t addend = internal::combine(N).addend;
+    };
+
+    /**
+     * Contains the multiplier and addend of the LCG equivalent to advancing the Java LCG by N.
+     */
+    template<int64_t N>
+    struct combined_lcg {
+        /// The multiplier of the LCG that advances by N.
+        static const uint64_t multiplier = ucombined_lcg<static_cast<uint64_t>(N)>::multiplier;
+        /// The addend of the LCG that advances by N.
+        static const uint64_t addend = ucombined_lcg<static_cast<uint64_t>(N)>::addend;
+    };
+
     /// Advances the Random by an unsigned N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
     template<uint64_t N = 1>
     DEVICEABLE constexpr void uadvance(Random &rand) {
-        internal::LCG lcg = internal::combine(N);
-        rand = (rand * lcg.multiplier + lcg.addend) & MASK;
+        rand = (rand * ucombined_lcg<N>::multiplier + ucombined_lcg<N>::addend) & MASK;
     }
 
     /// Advances the Random by N steps, which defaults to 1. Runs in O(1) time because of compile-time optimizations.
