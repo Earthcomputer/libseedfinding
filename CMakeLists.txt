@@ -181,6 +181,10 @@ list(APPEND LIBSEEDFINDING_HEADERS
         "util.h"
         "version.h"
         "cache.h"
+        "chunkRandomReversal.h"
+        "math/bigNumber.h"
+        "math/bigInteger.h"
+        "math/bigMatrix.h"
         )
 if (LIBSEEDFINDING_IS_USING_CUDA)
     list(APPEND LIBSEEDFINDING_HEADERS

@@ -2,8 +2,8 @@
 // version 1.0.1
 // MIT License
 
-#ifndef SEEDFINDING_VERSION_H
-#define SEEDFINDING_VERSION_H
+#ifndef LIBSEEDFINDING_VERSION_H
+#define LIBSEEDFINDING_VERSION_H
 #include <string>
 #include "util.h"
 
